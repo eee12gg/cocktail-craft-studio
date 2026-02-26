@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { getRecipeBySlug, getRecipesByCategory } from "@/data/recipes";
+import { ingredientImages } from "@/data/ingredientImages";
 import RecipeCard from "@/components/RecipeCard";
 import { ArrowLeft, Clock, Wine, ChefHat } from "lucide-react";
 
@@ -129,10 +130,19 @@ export default function RecipePage() {
               <h2 className="font-display text-xl font-bold text-foreground mb-4">Ingredients</h2>
               <ul className="space-y-3">
                 {recipe.ingredients.map((ing) => (
-                  <li key={ing.name} className="flex items-center justify-between border-b border-border/30 pb-2 last:border-0">
+                  <li key={ing.name} className="flex items-center gap-3 border-b border-border/30 pb-3 last:border-0">
+                    <div className="w-12 h-12 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden flex-shrink-0">
+                      {ingredientImages[ing.name] ? (
+                        <img src={ingredientImages[ing.name]} alt={ing.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="flex items-center justify-center w-full h-full text-lg font-display text-muted-foreground">
+                          {ing.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
                     <Link
                       to={`/search?q=${encodeURIComponent(ing.name)}`}
-                      className="font-body text-sm text-foreground hover:text-primary transition-colors"
+                      className="font-body text-sm text-foreground hover:text-primary transition-colors flex-1"
                     >
                       {ing.name}
                     </Link>
@@ -164,7 +174,7 @@ export default function RecipePage() {
         {similar.length > 0 && (
           <div className="mt-16">
             <h2 className="font-display text-2xl font-bold text-foreground mb-6">Similar Recipes</h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-6">
               {similar.map((r) => (
                 <RecipeCard key={r.id} recipe={r} />
               ))}
