@@ -1,0 +1,177 @@
+import { useParams, Link } from "react-router-dom";
+import { getRecipeBySlug, getRecipesByCategory } from "@/data/recipes";
+import RecipeCard from "@/components/RecipeCard";
+import { ArrowLeft, Clock, Wine, ChefHat } from "lucide-react";
+
+const badgeColors: Record<string, string> = {
+  Trending: "bg-primary/20 text-primary",
+  Popular: "bg-accent/20 text-accent-foreground",
+  "Top 10": "bg-primary/30 text-primary",
+  New: "bg-secondary text-secondary-foreground",
+};
+
+const categoryLabels: Record<string, string> = {
+  cocktails: "Cocktails",
+  shots: "Shots",
+  "non-alcoholic": "Non-Alcoholic",
+};
+
+export default function RecipePage() {
+  const { slug } = useParams<{ slug: string }>();
+  const recipe = getRecipeBySlug(slug || "");
+
+  if (!recipe) {
+    return (
+      <div className="flex min-h-screen items-center justify-center pt-16">
+        <div className="text-center">
+          <h1 className="font-display text-3xl font-bold text-foreground">Recipe Not Found</h1>
+          <Link to="/" className="mt-4 inline-flex items-center gap-2 font-body text-primary hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const similar = getRecipesByCategory(recipe.category)
+    .filter((r) => r.id !== recipe.id)
+    .slice(0, 3);
+
+  return (
+    <div className="min-h-screen pt-16">
+      {/* Hero Image */}
+      <div className="relative">
+        <img src={recipe.image} alt={recipe.title} className="w-full object-cover h-[50vh] md:h-[60vh]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
+          <Link
+            to={`/${recipe.category}`}
+            className="mb-3 inline-flex items-center gap-1 font-body text-sm text-primary hover:underline"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> {categoryLabels[recipe.category]}
+          </Link>
+          <div className="flex items-start gap-3">
+            <h1 className="font-display text-4xl font-bold text-foreground md:text-5xl">{recipe.title}</h1>
+            {recipe.badge && (
+              <span className={`mt-2 rounded-full px-3 py-1 text-xs font-semibold font-body ${badgeColors[recipe.badge]}`}>
+                {recipe.badge}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-10">
+        <div className="grid gap-10 lg:grid-cols-3">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            <p className="font-body text-lg text-muted-foreground leading-relaxed">{recipe.description}</p>
+
+            <div className="flex flex-wrap gap-3">
+              <span className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 font-body text-sm text-secondary-foreground">
+                <Clock className="h-4 w-4 text-primary" /> {recipe.prep_time}
+              </span>
+              <span className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 font-body text-sm text-secondary-foreground">
+                <Wine className="h-4 w-4 text-primary" /> {recipe.alcohol_level}
+              </span>
+              <Link
+                to={`/${recipe.category}`}
+                className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 font-body text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors"
+              >
+                {categoryLabels[recipe.category]}
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {recipe.tags.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/search?q=${encodeURIComponent(tag)}`}
+                  className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground font-body hover:bg-secondary/80 transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {recipe.hashtags.map((ht) => (
+                <Link
+                  key={ht}
+                  to={`/search?q=${encodeURIComponent(ht.slice(1))}`}
+                  className="text-sm text-primary font-body font-medium hover:underline"
+                >
+                  {ht}
+                </Link>
+              ))}
+            </div>
+
+            {/* Instructions */}
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-4">Instructions</h2>
+              <ol className="space-y-4">
+                {recipe.instructions.map((step, i) => (
+                  <li key={i} className="flex gap-4">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary font-body">
+                      {i + 1}
+                    </span>
+                    <p className="font-body text-foreground pt-1">{step}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Ingredients */}
+            <div className="rounded-xl border border-border/50 bg-gradient-card p-6">
+              <h2 className="font-display text-xl font-bold text-foreground mb-4">Ingredients</h2>
+              <ul className="space-y-3">
+                {recipe.ingredients.map((ing) => (
+                  <li key={ing.name} className="flex items-center justify-between border-b border-border/30 pb-2 last:border-0">
+                    <Link
+                      to={`/search?q=${encodeURIComponent(ing.name)}`}
+                      className="font-body text-sm text-foreground hover:text-primary transition-colors"
+                    >
+                      {ing.name}
+                    </Link>
+                    <span className="font-body text-xs text-muted-foreground">
+                      {ing.amount_value} {ing.amount_unit}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Equipment */}
+            <div className="rounded-xl border border-border/50 bg-gradient-card p-6">
+              <h2 className="font-display text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <ChefHat className="h-5 w-5 text-primary" /> Equipment
+              </h2>
+              <ul className="space-y-2">
+                {recipe.equipment.map((eq) => (
+                  <li key={eq} className="font-body text-sm text-muted-foreground">
+                    • {eq}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Similar Recipes */}
+        {similar.length > 0 && (
+          <div className="mt-16">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">Similar Recipes</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {similar.map((r) => (
+                <RecipeCard key={r.id} recipe={r} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
