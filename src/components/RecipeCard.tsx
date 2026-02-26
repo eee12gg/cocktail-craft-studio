@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Recipe } from "@/data/recipes";
-import { Clock, Wine } from "lucide-react";
+import { ingredientImages } from "@/data/ingredientImages";
 
 const badgeColors: Record<string, string> = {
   Trending: "bg-primary/20 text-primary",
@@ -11,69 +11,75 @@ const badgeColors: Record<string, string> = {
 
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
-    <Link
-      to={`/recipe/${recipe.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl bg-gradient-card border border-border/50 shadow-card transition-all duration-300 hover:shadow-glow hover:border-primary/30 hover:-translate-y-1"
-    >
-      <div className="relative overflow-hidden">
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          className="image-immersive transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-        {recipe.badge && (
-          <span
-            className={`absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-semibold font-body ${badgeColors[recipe.badge]}`}
-          >
-            {recipe.badge}
-          </span>
-        )}
-      </div>
+    <div className="relative flex flex-col md:flex-row items-start gap-6 rounded-xl bg-gradient-card border border-border/50 shadow-card p-5 transition-all duration-300 hover:shadow-glow hover:border-primary/30">
+      {/* Badge */}
+      {recipe.badge && (
+        <span
+          className={`absolute top-3 left-3 z-10 rounded-full px-3 py-1 text-xs font-semibold font-body ${badgeColors[recipe.badge]}`}
+        >
+          {recipe.badge}
+        </span>
+      )}
 
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="font-display text-lg font-semibold text-foreground">
+      {/* Left: Drink photo + name */}
+      <Link
+        to={`/recipe/${recipe.slug}`}
+        className="flex-shrink-0 flex flex-col items-center w-full md:w-48 group"
+      >
+        <div className="relative w-40 h-52 md:w-48 md:h-60 overflow-hidden rounded-lg">
+          <img
+            src={recipe.image}
+            alt={recipe.title}
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        </div>
+        <h3 className="mt-3 font-display text-base md:text-lg font-semibold text-foreground text-center group-hover:text-primary transition-colors">
           {recipe.title}
         </h3>
-        <p className="font-body text-sm text-muted-foreground line-clamp-2">
-          {recipe.description}
-        </p>
+      </Link>
 
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {recipe.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground font-body"
-            >
-              {tag}
-            </span>
+      {/* Equals sign */}
+      <div className="hidden md:flex items-center text-3xl text-muted-foreground font-light self-center">
+        =
+      </div>
+
+      {/* Right: Ingredients with horizontal scroll */}
+      <div className="flex-1 min-w-0 w-full self-center">
+        <div className="flex items-start gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+          {recipe.ingredients.map((ing, i) => (
+            <div key={ing.name} className="flex items-start gap-0">
+              <Link
+                to={`/search?q=${encodeURIComponent(ing.name)}`}
+                className="flex flex-col items-center flex-shrink-0 w-20 md:w-24 group/ing"
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden flex items-center justify-center transition-all group-hover/ing:border-primary/50 group-hover/ing:shadow-glow">
+                  {ingredientImages[ing.name] ? (
+                    <img
+                      src={ingredientImages[ing.name]}
+                      alt={ing.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="text-2xl font-display text-muted-foreground">
+                      {ing.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <span className="mt-1.5 text-xs font-body text-muted-foreground text-center leading-tight line-clamp-2 group-hover/ing:text-foreground transition-colors">
+                  {ing.name}
+                </span>
+              </Link>
+              {i < recipe.ingredients.length - 1 && (
+                <span className="flex-shrink-0 self-center text-lg text-muted-foreground/50 mx-1 mt-4">
+                  +
+                </span>
+              )}
+            </div>
           ))}
-        </div>
-
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {recipe.hashtags.slice(0, 3).map((ht) => (
-            <span
-              key={ht}
-              className="text-xs text-primary font-body font-medium"
-            >
-              {ht}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-auto flex items-center gap-4 pt-3 border-t border-border/30 text-xs text-muted-foreground font-body">
-          <span className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" /> {recipe.prep_time}
-          </span>
-          <span className="flex items-center gap-1">
-            <Wine className="h-3.5 w-3.5" /> {recipe.alcohol_level}
-          </span>
-          <span className="ml-auto text-muted-foreground/70">
-            {recipe.ingredients.length} ingredients
-          </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
