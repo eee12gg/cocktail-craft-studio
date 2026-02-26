@@ -52,7 +52,7 @@ export default function SearchPage() {
         )}
 
         {results.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-6">
             {results.map((recipe, i) => (
               <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
                 <RecipeCard recipe={recipe} />
