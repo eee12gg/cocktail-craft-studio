@@ -82,7 +82,7 @@ export default function Index() {
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-6">
           {featured.map((recipe, i) => (
             <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
               <RecipeCard recipe={recipe} />
