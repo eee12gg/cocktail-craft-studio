@@ -49,8 +49,8 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
         <div className="flex items-start gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
           {recipe.ingredients.map((ing, i) => (
             <div key={ing.name} className="flex items-start gap-0">
-              <Link
-                to={`/search?q=${encodeURIComponent(ing.name)}`}
+                <Link
+                  to={`/ingredient/${ing.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
                 className="flex flex-col items-center flex-shrink-0 w-20 md:w-24 group/ing"
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden flex items-center justify-center transition-all group-hover/ing:border-primary/50 group-hover/ing:shadow-glow">
