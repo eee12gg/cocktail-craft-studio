@@ -37,7 +37,7 @@ const IngredientPage = () => {
       <title>{ingredient.name} — Cocktail Craft</title>
       <meta name="description" content={(ingredient.description || ingredient.name).slice(0, 160)} />
 
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 pt-16 pb-8 space-y-8">
         {/* 1. Ingredient Image */}
         <div className="flex justify-center">
           {ingredient.image ? (
