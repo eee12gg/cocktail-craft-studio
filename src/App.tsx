@@ -11,6 +11,7 @@ import NonAlcoholicPage from "./pages/NonAlcoholicPage";
 import RecipePage from "./pages/RecipePage";
 import SearchPage from "./pages/SearchPage";
 import NotFound from "./pages/NotFound";
+import IngredientPage from "./pages/IngredientPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/shots" element={<ShotsPage />} />
           <Route path="/non-alcoholic" element={<NonAlcoholicPage />} />
           <Route path="/recipe/:slug" element={<RecipePage />} />
+          <Route path="/ingredient/:slug" element={<IngredientPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
