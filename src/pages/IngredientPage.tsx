@@ -37,7 +37,7 @@ const IngredientPage = () => {
       <title>{ingredient.name} — Cocktail Craft</title>
       <meta name="description" content={(ingredient.description || ingredient.name).slice(0, 160)} />
 
-      <div className="max-w-2xl mx-auto px-4 pt-16 pb-8 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 pt-24 pb-8 space-y-8">
         {/* 1. Ingredient Image */}
         <div className="flex justify-center">
           {ingredient.image ? (
@@ -80,43 +80,6 @@ const IngredientPage = () => {
           </div>
         )}
 
-        {/* 3. Quick Recipe */}
-        {hasQuickRecipe && ingredient.quickRecipe && (
-          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-            <h2 className="text-xl font-display text-gradient-gold">Quick Recipe</h2>
-            <h3 className="text-lg font-semibold text-foreground">{ingredient.quickRecipe.drinkName}</h3>
-
-            {/* Ingredients */}
-            <div className="space-y-1">
-              {ingredient.quickRecipe.ingredients.map((ing, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                  {ing.amount}
-                </div>
-              ))}
-            </div>
-
-            {/* Steps */}
-            <ol className="space-y-2">
-              {ingredient.quickRecipe.steps.map((step, i) => (
-                <li key={i} className="flex gap-3 text-sm text-muted-foreground">
-                  <span className="text-primary font-bold shrink-0">{i + 1}.</span>
-                  {step.text}
-                </li>
-              ))}
-            </ol>
-
-            {/* View Full Recipe button */}
-            {ingredient.quickRecipe.fullRecipeSlug && (
-              <Link
-                to={`/recipe/${ingredient.quickRecipe.fullRecipeSlug}`}
-                className="inline-block mt-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
-              >
-                View Full Recipe
-              </Link>
-            )}
-          </div>
-        )}
 
         {/* Related Recipes */}
         {relatedRecipes.length > 0 && (
