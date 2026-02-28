@@ -47,7 +47,7 @@ export default function RecipePage() {
       <div className="min-h-screen pt-16">
         {/* Top Block: Image + Name + Description (unchanged structure) */}
         <div className="relative">
-          <img src={recipe.image} alt={recipe.title} className="w-full object-cover h-[50vh]" />
+          <img src={recipe.image} alt={recipe.title} className="h-[50vh] w-full bg-card object-contain" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 px-4 pb-6">
             <Link
@@ -165,7 +165,7 @@ export default function RecipePage() {
     <div className="min-h-screen pt-28">
       {/* Hero Image */}
       <div className="relative">
-        <img src={recipe.image} alt={recipe.title} className="w-full object-cover h-[60vh]" />
+        <img src={recipe.image} alt={recipe.title} className="h-[60vh] w-full bg-card object-contain" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
           <Link
