@@ -162,7 +162,7 @@ export default function RecipePage() {
 
   // Desktop layout
   return (
-    <div className="min-h-screen pt-[72px]">
+    <div className="min-h-screen pt-28">
       {/* Hero Image */}
       <div className="relative">
         <img src={recipe.image} alt={recipe.title} className="w-full object-cover h-[60vh]" />
