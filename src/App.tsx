@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import CocktailsPage from "./pages/CocktailsPage";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

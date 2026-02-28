@@ -1,0 +1,96 @@
+import { useState, useRef, useEffect } from "react";
+import type { Recipe } from "@/data/recipes";
+
+interface DrinkCarouselProps {
+  recipe: Recipe;
+}
+
+export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState<number | undefined>(undefined);
+  const slide0Ref = useRef<HTMLDivElement>(null);
+  const slide1Ref = useRef<HTMLDivElement>(null);
+
+  // Measure both slides and use the taller one to prevent height jumps
+  useEffect(() => {
+    const measure = () => {
+      const h0 = slide0Ref.current?.scrollHeight || 0;
+      const h1 = slide1Ref.current?.scrollHeight || 0;
+      setContainerHeight(Math.max(h0, h1));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [recipe]);
+
+  return (
+    <div className="space-y-4">
+      {/* Carousel container */}
+      <div
+        ref={containerRef}
+        className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-card"
+        style={{ height: containerHeight ? `${containerHeight}px` : "auto" }}
+      >
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+        >
+          {/* Slide 1: Recipe */}
+          <div ref={slide0Ref} className="w-full flex-shrink-0 p-5">
+            <h3 className="font-display text-xl font-bold text-foreground mb-4">Recipe</h3>
+            <ol className="space-y-3">
+              {recipe.instructions.map((step, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary font-body">
+                    {i + 1}
+                  </span>
+                  <p className="font-body text-sm text-foreground pt-0.5 leading-relaxed">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Slide 2: Bar Tools */}
+          <div ref={slide1Ref} className="w-full flex-shrink-0 p-5">
+            <h3 className="font-display text-xl font-bold text-foreground mb-4">Bar Tools</h3>
+            <ul className="space-y-3">
+              {recipe.equipment.map((eq) => (
+                <li key={eq} className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary/50 border border-border/30">
+                    <span className="text-lg">🍸</span>
+                  </div>
+                  <span className="font-body text-sm text-foreground">{eq}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Control buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => setActiveSlide(0)}
+          className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${
+            activeSlide === 0
+              ? "bg-primary text-primary-foreground shadow-glow"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          }`}
+        >
+          Recipe
+        </button>
+        <button
+          onClick={() => setActiveSlide(1)}
+          className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${
+            activeSlide === 1
+              ? "bg-primary text-primary-foreground shadow-glow"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          }`}
+        >
+          Tools
+        </button>
+      </div>
+    </div>
+  );
+}
