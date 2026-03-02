@@ -21,7 +21,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDrinksPlaceholder from "./pages/admin/AdminDrinksPlaceholder";
-import AdminIngredientsPlaceholder from "./pages/admin/AdminIngredientsPlaceholder";
+import AdminIngredients from "./pages/admin/AdminIngredients";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +55,7 @@ function AppContent() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="drinks" element={<AdminDrinksPlaceholder />} />
-          <Route path="ingredients" element={<AdminIngredientsPlaceholder />} />
+          <Route path="ingredients" element={<AdminIngredients />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 

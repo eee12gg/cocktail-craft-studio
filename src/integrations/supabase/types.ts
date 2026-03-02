@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ingredients: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_thumb_url: string | null
+          image_url: string | null
+          name: string
+          name_en: string | null
+          slug: string
+          type: Database["public"]["Enums"]["ingredient_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
+          name: string
+          name_en?: string | null
+          slug: string
+          type?: Database["public"]["Enums"]["ingredient_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
+          name?: string
+          name_en?: string | null
+          slug?: string
+          type?: Database["public"]["Enums"]["ingredient_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempted_at: string
@@ -102,6 +141,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      ingredient_type:
+        | "alcohol"
+        | "liqueur"
+        | "syrup"
+        | "juice"
+        | "fruit"
+        | "mixer"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -230,6 +277,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      ingredient_type: [
+        "alcohol",
+        "liqueur",
+        "syrup",
+        "juice",
+        "fruit",
+        "mixer",
+        "other",
+      ],
     },
   },
 } as const
