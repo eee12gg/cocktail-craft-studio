@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   GlassWater,
   Leaf,
+  MessageSquare,
   Settings,
   LogOut,
   ChevronLeft,
@@ -16,6 +17,7 @@ const navItems = [
   { label: "Дашборд", path: "/admin", icon: LayoutDashboard },
   { label: "Напитки", path: "/admin/drinks", icon: GlassWater },
   { label: "Ингредиенты", path: "/admin/ingredients", icon: Leaf },
+  { label: "Отзывы", path: "/admin/reviews", icon: MessageSquare },
   { label: "Настройки", path: "/admin/settings", icon: Settings },
 ];
 

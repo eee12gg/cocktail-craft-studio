@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      equipment: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       ingredients: {
         Row: {
           created_at: string
@@ -104,6 +143,294 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_equipment: {
+        Row: {
+          equipment_id: string
+          id: string
+          recipe_id: string
+        }
+        Insert: {
+          equipment_id: string
+          id?: string
+          recipe_id: string
+        }
+        Update: {
+          equipment_id?: string
+          id?: string
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_equipment_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_hashtags: {
+        Row: {
+          hashtag_id: string
+          id: string
+          recipe_id: string
+        }
+        Insert: {
+          hashtag_id: string
+          id?: string
+          recipe_id: string
+        }
+        Update: {
+          hashtag_id?: string
+          id?: string
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_hashtags_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_ingredients: {
+        Row: {
+          amount_unit: string | null
+          amount_value: number | null
+          display_text: string
+          id: string
+          ingredient_id: string
+          recipe_id: string
+          sort_order: number
+        }
+        Insert: {
+          amount_unit?: string | null
+          amount_value?: number | null
+          display_text: string
+          id?: string
+          ingredient_id: string
+          recipe_id: string
+          sort_order?: number
+        }
+        Update: {
+          amount_unit?: string | null
+          amount_value?: number | null
+          display_text?: string
+          id?: string
+          ingredient_id?: string
+          recipe_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_recommendations: {
+        Row: {
+          id: string
+          recipe_id: string
+          recommended_recipe_id: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          recommended_recipe_id: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          recommended_recipe_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_recommendations_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_recommendations_recommended_recipe_id_fkey"
+            columns: ["recommended_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_steps: {
+        Row: {
+          id: string
+          instruction: string
+          recipe_id: string
+          step_number: number
+        }
+        Insert: {
+          id?: string
+          instruction: string
+          recipe_id: string
+          step_number: number
+        }
+        Update: {
+          id?: string
+          instruction?: string
+          recipe_id?: string
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_steps_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_tags: {
+        Row: {
+          id: string
+          recipe_id: string
+          tag: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          tag: string
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_tags_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          alcohol_level: Database["public"]["Enums"]["alcohol_level"]
+          badge: Database["public"]["Enums"]["recipe_badge"] | null
+          category: Database["public"]["Enums"]["recipe_category"]
+          created_at: string
+          description: string | null
+          id: string
+          image_thumb_url: string | null
+          image_url: string | null
+          is_published: boolean
+          prep_time: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          alcohol_level?: Database["public"]["Enums"]["alcohol_level"]
+          badge?: Database["public"]["Enums"]["recipe_badge"] | null
+          category?: Database["public"]["Enums"]["recipe_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
+          is_published?: boolean
+          prep_time?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          alcohol_level?: Database["public"]["Enums"]["alcohol_level"]
+          badge?: Database["public"]["Enums"]["recipe_badge"] | null
+          category?: Database["public"]["Enums"]["recipe_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
+          is_published?: boolean
+          prep_time?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          author_name: string
+          created_at: string
+          id: string
+          is_visible: boolean
+          rating: number
+          recipe_id: string
+          text: string
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          rating: number
+          recipe_id: string
+          text: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          rating?: number
+          recipe_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -140,6 +467,7 @@ export type Database = {
       is_login_rate_limited: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
+      alcohol_level: "None" | "Light" | "Medium" | "Strong"
       app_role: "admin" | "user"
       ingredient_type:
         | "alcohol"
@@ -149,6 +477,8 @@ export type Database = {
         | "fruit"
         | "mixer"
         | "other"
+      recipe_badge: "Trending" | "Popular" | "Top 10" | "New"
+      recipe_category: "cocktails" | "shots" | "non-alcoholic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -276,6 +606,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alcohol_level: ["None", "Light", "Medium", "Strong"],
       app_role: ["admin", "user"],
       ingredient_type: [
         "alcohol",
@@ -286,6 +617,8 @@ export const Constants = {
         "mixer",
         "other",
       ],
+      recipe_badge: ["Trending", "Popular", "Top 10", "New"],
+      recipe_category: ["cocktails", "shots", "non-alcoholic"],
     },
   },
 } as const
