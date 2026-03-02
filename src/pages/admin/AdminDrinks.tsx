@@ -68,8 +68,8 @@ interface FormData {
   category: Category;
   description: string;
   prep_time: string;
-  alcohol_level: string;
-  badge: string;
+  alcohol_level: "None" | "Light" | "Medium" | "Strong";
+  badge: "" | "Trending" | "Popular" | "Top 10" | "New";
   is_published: boolean;
   image_url: string | null;
   image_thumb_url: string | null;
