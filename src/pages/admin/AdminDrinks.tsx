@@ -163,8 +163,8 @@ export default function AdminDrinks() {
       category: recipe.category,
       description: recipe.description || "",
       prep_time: recipe.prep_time || "",
-      alcohol_level: recipe.alcohol_level,
-      badge: recipe.badge || "",
+      alcohol_level: recipe.alcohol_level as FormData["alcohol_level"],
+      badge: (recipe.badge || "") as FormData["badge"],
       is_published: recipe.is_published,
       image_url: recipe.image_url,
       image_thumb_url: recipe.image_thumb_url,
@@ -438,7 +438,7 @@ export default function AdminDrinks() {
                   </div>
                   <div>
                     <Label>Крепость</Label>
-                    <Select value={form.alcohol_level} onValueChange={(v) => setForm((f) => ({ ...f, alcohol_level: v }))}>
+                    <Select value={form.alcohol_level} onValueChange={(v) => setForm((f) => ({ ...f, alcohol_level: v as FormData["alcohol_level"] }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>{ALCOHOL_LEVELS.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}</SelectContent>
                     </Select>
@@ -454,7 +454,7 @@ export default function AdminDrinks() {
               </div>
               <div>
                 <Label>Бейдж</Label>
-                <Select value={form.badge} onValueChange={(v) => setForm((f) => ({ ...f, badge: v }))}>
+                <Select value={form.badge} onValueChange={(v) => setForm((f) => ({ ...f, badge: v as FormData["badge"] }))}>
                   <SelectTrigger><SelectValue placeholder="Нет" /></SelectTrigger>
                   <SelectContent>{BADGES.map((b) => <SelectItem key={b.value || "none"} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
                 </Select>
