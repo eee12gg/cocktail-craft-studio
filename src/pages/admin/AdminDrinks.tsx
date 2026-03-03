@@ -20,7 +20,7 @@ const CATEGORIES = [
 ] as const;
 
 const BADGES = [
-  { value: "", label: "Нет" },
+  { value: "__none__", label: "Нет" },
   { value: "Trending", label: "Trending" },
   { value: "Popular", label: "Popular" },
   { value: "Top 10", label: "Top 10" },
