@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { recipes } from "@/data/recipes";
+import { useRecipes, type DBRecipe } from "@/hooks/useRecipes";
 import RecipeCard from "@/components/RecipeCard";
 import { ArrowRight, Wine, Zap, Leaf } from "lucide-react";
 
@@ -9,9 +9,10 @@ const categories = [
   { label: "Non-Alcoholic", path: "/non-alcoholic", icon: Leaf, description: "Refreshing mocktails" },
 ];
 
-const featured = recipes.filter((r) => r.badge).slice(0, 6);
-
 export default function Index() {
+  const { data: recipes, isLoading } = useRecipes();
+  const featured = (recipes || []).filter((r) => r.badge).slice(0, 6);
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -29,16 +30,10 @@ export default function Index() {
             Discover expertly curated recipes — from timeless classics to bold new creations.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-            <Link
-              to="/cocktails"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-body text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow"
-            >
+            <Link to="/cocktails" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-body text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
               Explore Recipes <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              to="/search"
-              className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 font-body text-sm font-medium text-foreground transition-colors hover:border-primary/50"
-            >
+            <Link to="/search" className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 font-body text-sm font-medium text-foreground transition-colors hover:border-primary/50">
               Search
             </Link>
           </div>
@@ -49,12 +44,7 @@ export default function Index() {
       <section className="container mx-auto px-4 py-16">
         <div className="grid gap-4 sm:grid-cols-3">
           {categories.map((cat, i) => (
-            <Link
-              key={cat.path}
-              to={cat.path}
-              className="group flex items-center gap-4 rounded-xl border border-border/50 bg-gradient-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-glow animate-fade-in"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
+            <Link key={cat.path} to={cat.path} className="group flex items-center gap-4 rounded-xl border border-border/50 bg-gradient-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-glow animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
                 <cat.icon className="h-6 w-6" />
               </div>
@@ -75,20 +65,23 @@ export default function Index() {
             <h2 className="font-display text-3xl font-bold text-foreground">Featured Recipes</h2>
             <p className="mt-1 font-body text-muted-foreground">Our most popular picks</p>
           </div>
-          <Link
-            to="/cocktails"
-            className="hidden items-center gap-1 font-body text-sm font-medium text-primary hover:underline sm:flex"
-          >
+          <Link to="/cocktails" className="hidden items-center gap-1 font-body text-sm font-medium text-primary hover:underline sm:flex">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="flex flex-col gap-6">
-          {featured.map((recipe, i) => (
-            <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-              <RecipeCard recipe={recipe} />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <p className="font-body text-muted-foreground">Loading recipes...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            {featured.map((recipe, i) => (
+              <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                <RecipeCard recipe={recipe} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

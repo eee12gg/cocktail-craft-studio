@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
-import { searchRecipes } from "@/data/recipes";
+import { useSearchRecipes } from "@/hooks/useRecipes";
 import RecipeCard from "@/components/RecipeCard";
 
 export default function SearchPage() {
@@ -14,10 +14,7 @@ export default function SearchPage() {
     if (q) setQuery(q);
   }, [searchParams]);
 
-  const results = useMemo(() => {
-    if (!query.trim()) return [];
-    return searchRecipes(query);
-  }, [query]);
+  const { data: results } = useSearchRecipes(query);
 
   const handleSearch = (value: string) => {
     setQuery(value);
@@ -35,14 +32,7 @@ export default function SearchPage() {
 
         <div className="relative mb-8 max-w-xl">
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by name, ingredient, tag, hashtag, equipment..."
-            value={query}
-            onChange={(e) => handleSearch(e.target.value)}
-            autoFocus
-            className="w-full rounded-xl border border-border bg-secondary pl-12 pr-4 py-3 text-base font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-          />
+          <input type="text" placeholder="Search by name, ingredient, tag, hashtag, equipment..." value={query} onChange={(e) => handleSearch(e.target.value)} autoFocus className="w-full rounded-xl border border-border bg-secondary pl-12 pr-4 py-3 text-base font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
         </div>
 
         {query.trim() && (
@@ -62,16 +52,12 @@ export default function SearchPage() {
         ) : query.trim() ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="font-display text-xl text-muted-foreground">No results found</p>
-            <p className="mt-2 font-body text-sm text-muted-foreground">
-              Try different keywords or browse categories.
-            </p>
+            <p className="mt-2 font-body text-sm text-muted-foreground">Try different keywords or browse categories.</p>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="font-display text-xl text-muted-foreground">Start typing to search</p>
-            <p className="mt-2 font-body text-sm text-muted-foreground">
-              Search by recipe name, ingredient, tag, hashtag, or equipment.
-            </p>
+            <p className="mt-2 font-body text-sm text-muted-foreground">Search by recipe name, ingredient, tag, hashtag, or equipment.</p>
           </div>
         )}
       </div>
