@@ -454,9 +454,9 @@ export default function AdminDrinks() {
               </div>
               <div>
                 <Label>Бейдж</Label>
-                <Select value={form.badge} onValueChange={(v) => setForm((f) => ({ ...f, badge: v as FormData["badge"] }))}>
+                <Select value={form.badge || "__none__"} onValueChange={(v) => setForm((f) => ({ ...f, badge: v === "__none__" ? "" : v as FormData["badge"] }))}>
                   <SelectTrigger><SelectValue placeholder="Нет" /></SelectTrigger>
-                  <SelectContent>{BADGES.map((b) => <SelectItem key={b.value || "none"} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
+                  <SelectContent>{BADGES.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
