@@ -53,6 +53,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_translations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          ingredient_id: string
+          language_code: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          ingredient_id: string
+          language_code: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          ingredient_id?: string
+          language_code?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_translations_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredient_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       ingredients: {
         Row: {
           created_at: string
@@ -89,6 +137,36 @@ export type Database = {
           slug?: string
           type?: Database["public"]["Enums"]["ingredient_type"]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      languages: {
+        Row: {
+          code: string
+          created_at: string
+          flag_emoji: string
+          is_active: boolean
+          name: string
+          native_name: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flag_emoji?: string
+          is_active?: boolean
+          name: string
+          native_name: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flag_emoji?: string
+          is_active?: boolean
+          name?: string
+          native_name?: string
+          sort_order?: number
         }
         Relationships: []
       }
@@ -290,6 +368,42 @@ export type Database = {
           },
         ]
       }
+      recipe_step_translations: {
+        Row: {
+          id: string
+          instruction: string
+          language_code: string
+          recipe_step_id: string
+        }
+        Insert: {
+          id?: string
+          instruction: string
+          language_code: string
+          recipe_step_id: string
+        }
+        Update: {
+          id?: string
+          instruction?: string
+          language_code?: string
+          recipe_step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_step_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "recipe_step_translations_recipe_step_id_fkey"
+            columns: ["recipe_step_id"]
+            isOneToOne: false
+            referencedRelation: "recipe_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_steps: {
         Row: {
           id: string
@@ -338,6 +452,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "recipe_tags_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_translations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          language_code: string
+          recipe_id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code: string
+          recipe_id: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          language_code?: string
+          recipe_id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "recipe_translations_recipe_id_fkey"
             columns: ["recipe_id"]
             isOneToOne: false
             referencedRelation: "recipes"
@@ -428,6 +590,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "recipes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      ui_translations: {
+        Row: {
+          id: string
+          key: string
+          language_code: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          language_code: string
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          language_code?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ui_translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
           },
         ]
       }
