@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/hooks/useLanguage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -23,50 +24,33 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDrinks from "./pages/admin/AdminDrinks";
 import AdminIngredients from "./pages/admin/AdminIngredients";
 import AdminReviews from "./pages/admin/AdminReviews";
+import { Outlet } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
-function AppContent() {
-  const location = useLocation();
-  const isAdmin = location.pathname.startsWith("/admin");
-
+/** Layout wrapper for public pages with language support */
+function PublicLayout() {
   return (
-    <>
-      <ScrollToTop />
-      {!isAdmin && <Header />}
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/cocktails" element={<CocktailsPage />} />
-        <Route path="/shots" element={<ShotsPage />} />
-        <Route path="/non-alcoholic" element={<NonAlcoholicPage />} />
-        <Route path="/recipe/:slug" element={<RecipePage />} />
-        <Route path="/ingredient/:slug" element={<IngredientPage />} />
-        <Route path="/search" element={<SearchPage />} />
-
-        {/* Admin routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="drinks" element={<AdminDrinks />} />
-          <Route path="ingredients" element={<AdminIngredients />} />
-          <Route path="reviews" element={<AdminReviews />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
-
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      {!isAdmin && <Footer />}
-    </>
+    <LanguageProvider>
+      <Header />
+      <Outlet />
+      <Footer />
+    </LanguageProvider>
   );
 }
+
+const publicRoutes = (
+  <>
+    <Route index element={<Index />} />
+    <Route path="cocktails" element={<CocktailsPage />} />
+    <Route path="shots" element={<ShotsPage />} />
+    <Route path="non-alcoholic" element={<NonAlcoholicPage />} />
+    <Route path="recipe/:slug" element={<RecipePage />} />
+    <Route path="ingredient/:slug" element={<IngredientPage />} />
+    <Route path="search" element={<SearchPage />} />
+    <Route path="*" element={<NotFound />} />
+  </>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -75,7 +59,35 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppContent />
+          <ScrollToTop />
+          <Routes>
+            {/* Admin routes — no language prefix */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="drinks" element={<AdminDrinks />} />
+              <Route path="ingredients" element={<AdminIngredients />} />
+              <Route path="reviews" element={<AdminReviews />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+
+            {/* Localized public routes: /:lang/... */}
+            <Route path="/:lang" element={<PublicLayout />}>
+              {publicRoutes}
+            </Route>
+
+            {/* Default language (en) — no prefix */}
+            <Route path="/" element={<PublicLayout />}>
+              {publicRoutes}
+            </Route>
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

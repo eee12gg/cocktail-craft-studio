@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { DBRecipe } from "@/hooks/useRecipes";
-import { ChefHat } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const badgeColors: Record<string, string> = {
   Trending: "bg-primary/20 text-primary",
@@ -10,6 +10,8 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
+  const { localePath } = useLanguage();
+
   return (
     <div className="relative flex flex-col md:flex-row items-start gap-6 rounded-xl bg-gradient-card border border-border/50 shadow-card p-5 transition-all duration-300 hover:shadow-glow hover:border-primary/30">
       {recipe.badge && (
@@ -18,7 +20,7 @@ export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
         </span>
       )}
 
-      <Link to={`/recipe/${recipe.slug}`} className="flex-shrink-0 flex flex-col items-center w-full md:w-48 group">
+      <Link to={localePath(`/recipe/${recipe.slug}`)} className="flex-shrink-0 flex flex-col items-center w-full md:w-48 group">
         <div className="relative w-40 h-52 md:w-48 md:h-60 overflow-hidden rounded-lg">
           {recipe.image_url ? (
             <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" loading="lazy" />
@@ -40,7 +42,7 @@ export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
           {recipe.ingredients.map((ing, i) => (
             <div key={ing.name + i} className="flex items-start gap-0">
               <Link
-                to={`/ingredient/${ing.slug}`}
+                to={localePath(`/ingredient/${ing.slug}`)}
                 className="flex flex-col items-center flex-shrink-0 w-20 md:w-24 group/ing"
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden flex items-center justify-center transition-all group-hover/ing:border-primary/50 group-hover/ing:shadow-glow">
