@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { useIngredientBySlug } from "@/hooks/useIngredients";
 import { useRecipes } from "@/hooks/useRecipes";
+import { useLanguage } from "@/hooks/useLanguage";
 import RecipeCard from "@/components/RecipeCard";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -9,12 +10,13 @@ const IngredientPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: ingredient, isLoading } = useIngredientBySlug(slug || "");
   const { data: allRecipes } = useRecipes();
+  const { localePath, t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="font-body text-muted-foreground">Loading...</p>
+        <p className="font-body text-muted-foreground">{t("common.loading", "Loading...")}</p>
       </div>
     );
   }
@@ -23,8 +25,8 @@ const IngredientPage = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-display text-gradient-gold">Ingredient Not Found</h1>
-          <Link to="/" className="text-primary hover:underline">Back to Home</Link>
+          <h1 className="text-3xl font-display text-gradient-gold">{t("ingredient.not_found", "Ingredient Not Found")}</h1>
+          <Link to={localePath("/")} className="text-primary hover:underline">{t("common.back_home", "Back to Home")}</Link>
         </div>
       </div>
     );
@@ -65,7 +67,7 @@ const IngredientPage = () => {
             </div>
             {isLongDescription && (
               <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors text-sm font-medium">
-                {expanded ? (<>Show less <ChevronUp className="w-4 h-4" /></>) : (<>Read more <ChevronDown className="w-4 h-4" /></>)}
+                {expanded ? (<>{t("common.show_less", "Show less")} <ChevronUp className="w-4 h-4" /></>) : (<>{t("common.read_more", "Read more")} <ChevronDown className="w-4 h-4" /></>)}
               </button>
             )}
           </div>
@@ -73,7 +75,7 @@ const IngredientPage = () => {
 
         {relatedRecipes.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-display text-gradient-gold">Recipes with {ingredient.name}</h2>
+            <h2 className="text-xl font-display text-gradient-gold">{t("ingredient.recipes_with", "Recipes with")} {ingredient.name}</h2>
             <div className="flex flex-col gap-6">
               {relatedRecipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />
