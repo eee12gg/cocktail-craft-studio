@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDrinks from "./pages/admin/AdminDrinks";
 import AdminIngredients from "./pages/admin/AdminIngredients";
+import AdminReviews from "./pages/admin/AdminReviews";
 import AdminLanguages from "./pages/admin/AdminLanguages";
 import { Outlet } from "react-router-dom";
 
