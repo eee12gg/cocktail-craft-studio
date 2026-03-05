@@ -9,6 +9,7 @@ import {
   LogOut,
   ChevronLeft,
   Menu,
+  Globe,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Напитки", path: "/admin/drinks", icon: GlassWater },
   { label: "Ингредиенты", path: "/admin/ingredients", icon: Leaf },
   { label: "Отзывы", path: "/admin/reviews", icon: MessageSquare },
+  { label: "Языки", path: "/admin/languages", icon: Globe },
   { label: "Настройки", path: "/admin/settings", icon: Settings },
 ];
 
