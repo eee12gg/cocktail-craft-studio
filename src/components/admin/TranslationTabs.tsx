@@ -102,18 +102,31 @@ export default function TranslationTabs({ type, parentId, onSaved }: Translation
     };
 
     // Check if exists
-    const { data: existing } = await supabase
-      .from(tableName)
-      .select("id")
-      .eq(parentCol, parentId)
-      .eq("language_code", langCode)
-      .maybeSingle();
-
     let error;
-    if (existing) {
-      ({ error } = await supabase.from(tableName).update(payload).eq("id", existing.id));
+    if (type === "recipe") {
+      const { data: existing } = await supabase
+        .from("recipe_translations")
+        .select("id")
+        .eq("recipe_id", parentId)
+        .eq("language_code", langCode)
+        .maybeSingle();
+      if (existing) {
+        ({ error } = await supabase.from("recipe_translations").update(payload).eq("id", existing.id));
+      } else {
+        ({ error } = await supabase.from("recipe_translations").insert(payload));
+      }
     } else {
-      ({ error } = await supabase.from(tableName).insert(payload));
+      const { data: existing } = await supabase
+        .from("ingredient_translations")
+        .select("id")
+        .eq("ingredient_id", parentId)
+        .eq("language_code", langCode)
+        .maybeSingle();
+      if (existing) {
+        ({ error } = await supabase.from("ingredient_translations").update(payload).eq("id", existing.id));
+      } else {
+        ({ error } = await supabase.from("ingredient_translations").insert(payload));
+      }
     }
 
     if (error) toast.error("Ошибка: " + error.message);
