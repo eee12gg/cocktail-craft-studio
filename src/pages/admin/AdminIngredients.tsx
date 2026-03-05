@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, Search, Leaf } from "lucide-react";
 import { toast } from "sonner";
+import TranslationTabs from "@/components/admin/TranslationTabs";
 
 const INGREDIENT_TYPES = [
   { value: "alcohol", label: "Алкоголь" },
