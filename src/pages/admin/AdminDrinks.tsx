@@ -617,6 +617,9 @@ export default function AdminDrinks() {
                 </SelectContent>
               </Select>
             </div>
+            {editingId && (
+              <TranslationTabs type="recipe" parentId={editingId} />
+            )}
           </div>
 
           <DialogFooter>

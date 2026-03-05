@@ -298,6 +298,9 @@ export default function AdminIngredients() {
                 rows={4}
               />
             </div>
+            {editingId && (
+              <TranslationTabs type="ingredient" parentId={editingId} />
+            )}
           </div>
 
           <DialogFooter>
