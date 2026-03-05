@@ -23,7 +23,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDrinks from "./pages/admin/AdminDrinks";
 import AdminIngredients from "./pages/admin/AdminIngredients";
-import AdminReviews from "./pages/admin/AdminReviews";
+import AdminLanguages from "./pages/admin/AdminLanguages";
 import { Outlet } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -75,6 +75,7 @@ const App = () => (
               <Route path="drinks" element={<AdminDrinks />} />
               <Route path="ingredients" element={<AdminIngredients />} />
               <Route path="reviews" element={<AdminReviews />} />
+              <Route path="languages" element={<AdminLanguages />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
