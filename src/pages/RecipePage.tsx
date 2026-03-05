@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useRecipeBySlug, useRecipesByCategory } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 import RecipeCard from "@/components/RecipeCard";
+import SeoHead from "@/components/SeoHead";
 import DrinkCarousel from "@/components/DrinkCarousel";
 import ReviewSection from "@/components/ReviewSection";
 import { ArrowLeft, Clock, Wine, ChefHat } from "lucide-react";
@@ -52,9 +53,18 @@ export default function RecipePage() {
     ? recipe.recommendations
     : (categoryRecipes || []).filter((r) => r.id !== recipe.id).slice(0, 3).map((r) => ({ id: r.id, slug: r.slug, title: r.title, image_url: r.image_url }));
 
+  const seoHead = recipe ? (
+    <SeoHead
+      path={`/recipe/${recipe.slug}`}
+      title={`${recipe.title} — Cocktail Craft`}
+      description={recipe.description || `${recipe.title} recipe`}
+    />
+  ) : null;
+
   if (isMobile) {
     return (
       <div className="min-h-screen pt-16">
+        {seoHead}
         <div className="relative">
           {recipe.image_url ? (
             <img src={recipe.image_url} alt={recipe.title} className="h-[50vh] w-full bg-card object-contain" />
@@ -144,6 +154,7 @@ export default function RecipePage() {
   // Desktop
   return (
     <div className="min-h-screen pt-28">
+      {seoHead}
       <div className="relative">
         {recipe.image_url ? (
           <img src={recipe.image_url} alt={recipe.title} className="h-[60vh] w-full bg-card object-contain" />

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useSearchRecipes } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import SeoHead from "@/components/SeoHead";
 import RecipeCard from "@/components/RecipeCard";
 
 export default function SearchPage() {
@@ -29,6 +30,11 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
+      <SeoHead
+        path="/search"
+        title={`${t("nav.search", "Search")} — Cocktail Craft`}
+        description={t("seo.search_desc", "Search cocktail recipes by name, ingredient, tag or equipment.")}
+      />
       <div className="container mx-auto px-4">
         <h1 className="font-display text-4xl font-bold text-foreground mb-6">{t("nav.search", "Search")}</h1>
 

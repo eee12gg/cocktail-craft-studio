@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useIngredientBySlug } from "@/hooks/useIngredients";
 import { useRecipes } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import SeoHead from "@/components/SeoHead";
 import RecipeCard from "@/components/RecipeCard";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -44,8 +45,11 @@ const IngredientPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <title>{ingredient.name} — Cocktail Craft</title>
-      <meta name="description" content={(ingredient.description || ingredient.name).slice(0, 160)} />
+      <SeoHead
+        path={`/ingredient/${ingredient.slug}`}
+        title={`${ingredient.name} — Cocktail Craft`}
+        description={(ingredient.description || ingredient.name).slice(0, 160)}
+      />
 
       <div className="max-w-2xl mx-auto px-4 pt-24 pb-8 space-y-8">
         <div className="flex justify-center">

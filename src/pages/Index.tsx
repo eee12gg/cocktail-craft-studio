@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useRecipes, type DBRecipe } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 import RecipeCard from "@/components/RecipeCard";
+import SeoHead from "@/components/SeoHead";
 import { ArrowRight, Wine, Zap, Leaf } from "lucide-react";
 
 export default function Index() {
@@ -17,6 +18,11 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
+      <SeoHead
+        path="/"
+        title={t("seo.home_title", "Cocktail Craft — Discover Perfect Cocktail Recipes")}
+        description={t("seo.home_desc", "Explore expertly curated cocktail recipes — from timeless classics to bold new creations. Cocktails, shots, and non-alcoholic mocktails.")}
+      />
       {/* Hero */}
       <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden pt-16">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
