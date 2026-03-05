@@ -45,10 +45,10 @@ export default function TranslationTabs({ type, parentId, onSaved }: Translation
 
   useEffect(() => {
     const load = async () => {
-      const [langRes, transRes] = await Promise.all([
-        supabase.from("languages").select("code, name, flag_emoji").eq("is_active", true).order("sort_order"),
-        supabase.from(tableName).select("*").eq(parentCol, parentId),
-      ]);
+      const langRes = await supabase.from("languages").select("code, name, flag_emoji").eq("is_active", true).order("sort_order");
+      const transRes = type === "recipe"
+        ? await supabase.from("recipe_translations").select("*").eq("recipe_id", parentId)
+        : await supabase.from("ingredient_translations").select("*").eq("ingredient_id", parentId);
 
       if (langRes.data) {
         // Filter out 'en' since that's the main record
