@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { useRecipesByCategory, type DBRecipe } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import SeoHead from "./SeoHead";
 import RecipeCard from "./RecipeCard";
 
 type Category = "cocktails" | "shots" | "non-alcoholic";
@@ -49,6 +50,11 @@ export default function CategoryPage({ category }: { category: Category }) {
 
   return (
     <div className="min-h-screen pt-24 pb-12">
+      <SeoHead
+        path={`/${category}`}
+        title={`${t(`cat.${category}`, categoryTitles[category])} — Cocktail Craft`}
+        description={t(`cat.${category}_desc`, categoryDescriptions[category])}
+      />
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h1 className="font-display text-4xl font-bold text-foreground md:text-5xl">{t(`cat.${category}`, categoryTitles[category])}</h1>

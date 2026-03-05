@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useSearchRecipes } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import SeoHead from "@/components/SeoHead";
 import RecipeCard from "@/components/RecipeCard";
 
 export default function SearchPage() {
