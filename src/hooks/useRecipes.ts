@@ -150,7 +150,7 @@ export function useSearchRecipes(query: string) {
       r.tags.some((t) => t.toLowerCase().includes(q)) ||
       r.hashtags.some((h) => h.toLowerCase().includes(q)) ||
       r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-      r.equipment.some((e) => e.toLowerCase().includes(q)) ||
+      r.equipment.some((e) => e.name.toLowerCase().includes(q)) ||
       r.category.toLowerCase().includes(q)
   );
   return { data: results, ...rest };
