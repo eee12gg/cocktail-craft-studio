@@ -1,5 +1,6 @@
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPath } from "@/hooks/useAdminPath";
 import {
   LayoutDashboard,
   GlassWater,
@@ -14,29 +15,29 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
-  { label: "Дашборд", path: "/admin", icon: LayoutDashboard },
-  { label: "Напитки", path: "/admin/drinks", icon: GlassWater },
-  { label: "Ингредиенты", path: "/admin/ingredients", icon: Leaf },
-  { label: "Отзывы", path: "/admin/reviews", icon: MessageSquare },
-  { label: "Языки", path: "/admin/languages", icon: Globe },
-  { label: "Настройки", path: "/admin/settings", icon: Settings },
-];
-
 export default function AdminLayout() {
   const { signOut } = useAuth();
+  const { adminPath } = useAdminPath();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const base = `/${adminPath}`;
+  const navItems = [
+    { label: "Дашборд", path: base, icon: LayoutDashboard },
+    { label: "Напитки", path: `${base}/drinks`, icon: GlassWater },
+    { label: "Ингредиенты", path: `${base}/ingredients`, icon: Leaf },
+    { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
+    { label: "Языки", path: `${base}/languages`, icon: Globe },
+    { label: "Настройки", path: `${base}/settings`, icon: Settings },
+  ];
+
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-sidebar transition-all duration-300 md:relative md:z-auto ${
           collapsed ? "w-16" : "w-60"
@@ -88,7 +89,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center gap-3 border-b border-border px-4 md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>

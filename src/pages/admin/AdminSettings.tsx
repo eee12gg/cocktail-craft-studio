@@ -1,18 +1,22 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPath } from "@/hooks/useAdminPath";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { User, Mail, Lock, Save } from "lucide-react";
+import { User, Mail, Lock, Save, Link2 } from "lucide-react";
 
 export default function AdminSettings() {
   const { user } = useAuth();
+  const { adminPath, setAdminPath } = useAdminPath();
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newAdminPath, setNewAdminPath] = useState(adminPath);
   const [saving, setSaving] = useState(false);
 
   const handleUpdateUsername = async () => {
@@ -60,15 +64,57 @@ export default function AdminSettings() {
       toast.error("Ошибка при обновлении пароля");
     } else {
       toast.success("Пароль обновлён");
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+    }
+  };
+
+  const handleUpdateAdminPath = async () => {
+    setSaving(true);
+    const { error } = await setAdminPath(newAdminPath);
+    setSaving(false);
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("URL админ-панели обновлён. Перенаправляю...");
+      setTimeout(() => {
+        navigate(`/${newAdminPath}/settings`);
+      }, 1000);
     }
   };
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <h1 className="font-display text-2xl font-bold text-foreground">Настройки</h1>
+
+      {/* Admin URL */}
+      <section className="rounded-xl border border-border bg-card p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Link2 className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-lg font-semibold text-foreground">URL админ-панели</h2>
+        </div>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Текущий путь: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">/{adminPath}</code>
+        </p>
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">/</span>
+            <Input
+              placeholder="new-admin-path"
+              value={newAdminPath}
+              onChange={(e) => setNewAdminPath(e.target.value.replace(/[^a-zA-Z0-9-_]/g, "").toLowerCase())}
+              className="pl-7"
+            />
+          </div>
+          <Button onClick={handleUpdateAdminPath} disabled={saving || !newAdminPath || newAdminPath === adminPath}>
+            <Save className="mr-2 h-4 w-4" />
+            Изменить
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          ⚠️ После изменения старый URL перестанет работать. Запомните новый путь!
+        </p>
+      </section>
 
       {/* Username */}
       <section className="rounded-xl border border-border bg-card p-6">
