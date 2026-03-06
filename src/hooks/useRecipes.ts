@@ -22,7 +22,7 @@ export interface DBRecipe {
   badge: string | null;
   is_published: boolean;
   ingredients: DBRecipeIngredient[];
-  equipment: string[];
+  equipment: { name: string; image_url: string | null; description: string | null }[];
   instructions: string[];
   tags: string[];
   hashtags: string[];
@@ -54,7 +54,7 @@ async function fetchFullRecipes(): Promise<DBRecipe[]> {
       .order("step_number"),
     supabase
       .from("recipe_equipment")
-      .select("recipe_id, equipment:equipment(name)")
+      .select("recipe_id, equipment:equipment(name, image_url, description)")
       .in("recipe_id", recipeIds),
     supabase
       .from("recipe_tags")
@@ -94,7 +94,11 @@ async function fetchFullRecipes(): Promise<DBRecipe[]> {
       })),
     equipment: (equipmentRes.data || [])
       .filter((e) => e.recipe_id === r.id)
-      .map((e) => (e.equipment as any)?.name || ""),
+      .map((e) => ({
+        name: (e.equipment as any)?.name || "",
+        image_url: (e.equipment as any)?.image_url || null,
+        description: (e.equipment as any)?.description || null,
+      })),
     instructions: (stepsRes.data || [])
       .filter((s) => s.recipe_id === r.id)
       .map((s) => s.instruction),
@@ -146,7 +150,7 @@ export function useSearchRecipes(query: string) {
       r.tags.some((t) => t.toLowerCase().includes(q)) ||
       r.hashtags.some((h) => h.toLowerCase().includes(q)) ||
       r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-      r.equipment.some((e) => e.toLowerCase().includes(q)) ||
+      r.equipment.some((e) => e.name.toLowerCase().includes(q)) ||
       r.category.toLowerCase().includes(q)
   );
   return { data: results, ...rest };

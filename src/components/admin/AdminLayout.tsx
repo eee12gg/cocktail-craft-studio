@@ -11,6 +11,8 @@ import {
   ChevronLeft,
   Menu,
   Globe,
+  Wrench,
+  Tag,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,8 @@ export default function AdminLayout() {
     { label: "Дашборд", path: base, icon: LayoutDashboard },
     { label: "Напитки", path: `${base}/drinks`, icon: GlassWater },
     { label: "Ингредиенты", path: `${base}/ingredients`, icon: Leaf },
+    { label: "Типы ингредиентов", path: `${base}/ingredient-types`, icon: Tag },
+    { label: "Bar Tools", path: `${base}/tools`, icon: Wrench },
     { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
     { label: "Языки", path: `${base}/languages`, icon: Globe },
     { label: "Настройки", path: `${base}/settings`, icon: Settings },

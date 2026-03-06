@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Search } from "lucide-react";
 import { useRecipesByCategory, type DBRecipe } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -6,6 +6,8 @@ import SeoHead from "./SeoHead";
 import RecipeCard from "./RecipeCard";
 
 type Category = "cocktails" | "shots" | "non-alcoholic";
+
+const PAGE_SIZE = 20;
 
 const categoryTitles: Record<Category, string> = {
   cocktails: "Cocktails",
@@ -22,7 +24,9 @@ const categoryDescriptions: Record<Category, string> = {
 export default function CategoryPage({ category }: { category: Category }) {
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { t } = useLanguage();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { data: allRecipes, isLoading } = useRecipesByCategory(category);
 
@@ -47,6 +51,34 @@ export default function CategoryPage({ category }: { category: Category }) {
     }
     return result;
   }, [search, selectedTag, allRecipes]);
+
+  // Reset visible count when filter changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [search, selectedTag, category]);
+
+  const visibleRecipes = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  // Intersection Observer for infinite scroll
+  const loadMore = useCallback(() => {
+    if (hasMore) {
+      setVisibleCount((prev) => prev + PAGE_SIZE);
+    }
+  }, [hasMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   return (
     <div className="min-h-screen pt-24 pb-12">
@@ -84,11 +116,20 @@ export default function CategoryPage({ category }: { category: Category }) {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {filtered.map((recipe, i) => (
-              <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+            {visibleRecipes.map((recipe, i) => (
+              <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 5) * 80}ms` }}>
                 <RecipeCard recipe={recipe} />
               </div>
             ))}
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="flex justify-center py-8">
+              {hasMore ? (
+                <p className="font-body text-sm text-muted-foreground animate-pulse">Loading recipes...</p>
+              ) : filtered.length > PAGE_SIZE ? (
+                <p className="font-body text-sm text-muted-foreground">No more recipes</p>
+              ) : null}
+            </div>
           </div>
         )}
       </div>

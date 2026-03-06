@@ -42,9 +42,15 @@ export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
             <h3 className="font-display text-xl font-bold text-foreground mb-4">Bar Tools</h3>
             <ul className="space-y-3">
               {recipe.equipment.map((eq) => (
-                <li key={eq} className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary/50 border border-border/30"><span className="text-lg">🍸</span></div>
-                  <span className="font-body text-sm text-foreground">{eq}</span>
+                <li key={eq.name} className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-secondary/50 border border-border/30 overflow-hidden">
+                    {eq.image_url ? (
+                      <img src={eq.image_url} alt={eq.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-lg">🍸</span>
+                    )}
+                  </div>
+                  <span className="font-body text-sm text-foreground">{eq.name}</span>
                 </li>
               ))}
             </ul>

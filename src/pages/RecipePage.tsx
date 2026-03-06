@@ -221,9 +221,18 @@ export default function RecipePage() {
             <h2 className="font-display text-xl font-bold text-foreground mb-4 flex items-center gap-2"><ChefHat className="h-5 w-5 text-primary" /> {t("recipe.bar_tools", "Bar Tools")}</h2>
             <ul className="space-y-3">
               {recipe.equipment.map((eq) => (
-                <li key={eq} className="flex items-center gap-3 border-b border-border/30 pb-3 last:border-0 last:pb-0">
-                  <div className="w-10 h-10 rounded-lg bg-secondary/50 border border-border/30 flex items-center justify-center flex-shrink-0"><ChefHat className="h-5 w-5 text-primary/70" /></div>
-                  <span className="font-body text-sm text-foreground">{eq}</span>
+                <li key={eq.name} className="flex items-center gap-3 border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                  <div className="w-10 h-10 rounded-lg bg-secondary/50 border border-border/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {eq.image_url ? (
+                      <img src={eq.image_url} alt={eq.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <ChefHat className="h-5 w-5 text-primary/70" />
+                    )}
+                  </div>
+                  <div>
+                    <span className="font-body text-sm text-foreground">{eq.name}</span>
+                    {eq.description && <p className="font-body text-xs text-muted-foreground line-clamp-1">{eq.description}</p>}
+                  </div>
                 </li>
               ))}
             </ul>

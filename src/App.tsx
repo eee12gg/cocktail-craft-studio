@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AdminPathProvider, useAdminPath } from "@/hooks/useAdminPath";
 import { LanguageProvider } from "@/hooks/useLanguage";
@@ -19,6 +19,7 @@ import RecipePage from "./pages/RecipePage";
 import SearchPage from "./pages/SearchPage";
 import NotFound from "./pages/NotFound";
 import IngredientPage from "./pages/IngredientPage";
+import IngredientsPage from "./pages/IngredientsPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -26,11 +27,12 @@ import AdminDrinks from "./pages/admin/AdminDrinks";
 import AdminIngredients from "./pages/admin/AdminIngredients";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminLanguages from "./pages/admin/AdminLanguages";
+import AdminTools from "./pages/admin/AdminTools";
+import AdminIngredientTypes from "./pages/admin/AdminIngredientTypes";
 import { Outlet } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
-/** Layout wrapper for public pages with language support */
 function PublicLayout() {
   return (
     <LanguageProvider>
@@ -47,6 +49,7 @@ const publicRoutes = (
     <Route path="cocktails" element={<CocktailsPage />} />
     <Route path="shots" element={<ShotsPage />} />
     <Route path="non-alcoholic" element={<NonAlcoholicPage />} />
+    <Route path="ingredients" element={<IngredientsPage />} />
     <Route path="recipe/:slug" element={<RecipePage />} />
     <Route path="ingredient/:slug" element={<IngredientPage />} />
     <Route path="search" element={<SearchPage />} />
@@ -67,30 +70,25 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Dynamic admin routes */}
       <Route path={`/${adminPath}/login`} element={<AdminLogin />} />
       <Route
         path={`/${adminPath}`}
-        element={
-          <ProtectedRoute>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
+        element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
       >
         <Route index element={<AdminDashboard />} />
         <Route path="drinks" element={<AdminDrinks />} />
         <Route path="ingredients" element={<AdminIngredients />} />
+        <Route path="tools" element={<AdminTools />} />
+        <Route path="ingredient-types" element={<AdminIngredientTypes />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="languages" element={<AdminLanguages />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
-      {/* Localized public routes: /:lang/... */}
       <Route path="/:lang" element={<PublicLayout />}>
         {publicRoutes}
       </Route>
 
-      {/* Default language (en) — no prefix */}
       <Route path="/" element={<PublicLayout />}>
         {publicRoutes}
       </Route>

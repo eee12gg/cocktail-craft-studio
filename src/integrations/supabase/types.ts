@@ -38,19 +38,28 @@ export type Database = {
       equipment: {
         Row: {
           created_at: string
+          description: string | null
           id: string
+          image_thumb_url: string | null
+          image_url: string | null
           name: string
           slug: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
           name: string
           slug: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
+          image_thumb_url?: string | null
+          image_url?: string | null
           name?: string
           slug?: string
         }
@@ -122,6 +131,27 @@ export type Database = {
           },
         ]
       }
+      ingredient_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       ingredients: {
         Row: {
           created_at: string
@@ -133,6 +163,7 @@ export type Database = {
           name_en: string | null
           slug: string
           type: Database["public"]["Enums"]["ingredient_type"]
+          type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -145,6 +176,7 @@ export type Database = {
           name_en?: string | null
           slug: string
           type?: Database["public"]["Enums"]["ingredient_type"]
+          type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -157,9 +189,18 @@ export type Database = {
           name_en?: string | null
           slug?: string
           type?: Database["public"]["Enums"]["ingredient_type"]
+          type_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "ingredient_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       languages: {
         Row: {

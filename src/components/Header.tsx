@@ -8,6 +8,7 @@ const navItems = [
   { label: "Cocktails", path: "/cocktails" },
   { label: "Shots", path: "/shots" },
   { label: "Non-Alcoholic", path: "/non-alcoholic" },
+  { label: "Ingredients", path: "/ingredients" },
 ];
 
 export default function Header() {
