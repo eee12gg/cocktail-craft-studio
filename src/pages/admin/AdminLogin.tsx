@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPath } from "@/hooks/useAdminPath";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, AlertTriangle } from "lucide-react";
@@ -11,11 +12,11 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, isAdmin, user } = useAuth();
+  const { adminPath } = useAdminPath();
   const navigate = useNavigate();
 
-  // If already logged in as admin, redirect
   if (user && isAdmin) {
-    navigate("/admin", { replace: true });
+    navigate(`/${adminPath}`, { replace: true });
     return null;
   }
 
@@ -31,9 +32,8 @@ export default function AdminLogin() {
       return;
     }
 
-    // Wait a moment for admin role check
     setTimeout(() => {
-      navigate("/admin");
+      navigate(`/${adminPath}`);
       setLoading(false);
     }, 500);
   };

@@ -1,8 +1,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminPath } from "@/hooks/useAdminPath";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, loading } = useAuth();
+  const { adminPath } = useAdminPath();
 
   if (loading) {
     return (
@@ -13,7 +15,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to={`/${adminPath}/login`} replace />;
   }
 
   return <>{children}</>;

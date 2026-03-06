@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AdminPathProvider, useAdminPath } from "@/hooks/useAdminPath";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -53,6 +54,50 @@ const publicRoutes = (
   </>
 );
 
+function AppRoutes() {
+  const { adminPath, loading } = useAdminPath();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      {/* Dynamic admin routes */}
+      <Route path={`/${adminPath}/login`} element={<AdminLogin />} />
+      <Route
+        path={`/${adminPath}`}
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="drinks" element={<AdminDrinks />} />
+        <Route path="ingredients" element={<AdminIngredients />} />
+        <Route path="reviews" element={<AdminReviews />} />
+        <Route path="languages" element={<AdminLanguages />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
+
+      {/* Localized public routes: /:lang/... */}
+      <Route path="/:lang" element={<PublicLayout />}>
+        {publicRoutes}
+      </Route>
+
+      {/* Default language (en) — no prefix */}
+      <Route path="/" element={<PublicLayout />}>
+        {publicRoutes}
+      </Route>
+    </Routes>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -60,36 +105,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ScrollToTop />
-          <Routes>
-            {/* Admin routes — no language prefix */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="drinks" element={<AdminDrinks />} />
-              <Route path="ingredients" element={<AdminIngredients />} />
-              <Route path="reviews" element={<AdminReviews />} />
-              <Route path="languages" element={<AdminLanguages />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-
-            {/* Localized public routes: /:lang/... */}
-            <Route path="/:lang" element={<PublicLayout />}>
-              {publicRoutes}
-            </Route>
-
-            {/* Default language (en) — no prefix */}
-            <Route path="/" element={<PublicLayout />}>
-              {publicRoutes}
-            </Route>
-          </Routes>
+          <AdminPathProvider>
+            <ScrollToTop />
+            <AppRoutes />
+          </AdminPathProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

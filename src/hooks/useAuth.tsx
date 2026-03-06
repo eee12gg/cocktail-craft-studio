@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+
+const SESSION_FLAG = "admin_session_active";
 
 interface AuthContextType {
   user: User | null;
@@ -27,15 +29,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(!!data);
   };
 
+  // Auto-logout: if browser was closed (sessionStorage cleared) but localStorage session exists
   useEffect(() => {
+    const hasSessionFlag = sessionStorage.getItem(SESSION_FLAG);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          // If no session flag and this is an existing session (not a fresh login), sign out
+          if (!sessionStorage.getItem(SESSION_FLAG) && _event === "INITIAL_SESSION") {
+            // This means browser was reopened — force logout
+            await supabase.auth.signOut();
+            setIsAdmin(false);
+            setLoading(false);
+            return;
+          }
+          sessionStorage.setItem(SESSION_FLAG, "1");
           setTimeout(() => checkAdminRole(session.user.id), 0);
         } else {
           setIsAdmin(false);
+          sessionStorage.removeItem(SESSION_FLAG);
         }
         setLoading(false);
       }
@@ -45,6 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        if (!hasSessionFlag) {
+          // Browser was closed/reopened — sign out
+          supabase.auth.signOut();
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
         checkAdminRole(session.user.id);
       }
       setLoading(false);
@@ -54,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Check rate limit
     const { data: rateLimited } = await supabase.rpc("is_login_rate_limited", {
       _email: email,
     });
@@ -69,6 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: "Неверный email или пароль" };
     }
 
+    // Mark session as active in this browser tab/session
+    sessionStorage.setItem(SESSION_FLAG, "1");
     return { error: null };
   };
 
