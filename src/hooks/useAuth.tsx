@@ -76,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Check rate limit
     const { data: rateLimited } = await supabase.rpc("is_login_rate_limited", {
       _email: email,
     });
@@ -91,6 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: "Неверный email или пароль" };
     }
 
+    // Mark session as active in this browser tab/session
+    sessionStorage.setItem(SESSION_FLAG, "1");
     return { error: null };
   };
 
