@@ -3,24 +3,41 @@ import { useLanguage, SUPPORTED_LANGS, DEFAULT_LANG, type LangCode } from "@/hoo
 
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://cocktailcraft.com";
 
+/** Map language codes to full locale + region for hreflang & og:locale */
+const LANG_LOCALE_MAP: Record<string, { hreflang: string; ogLocale: string }> = {
+  en: { hreflang: "en", ogLocale: "en_US" },
+  de: { hreflang: "de", ogLocale: "de_DE" },
+  fr: { hreflang: "fr", ogLocale: "fr_FR" },
+  pl: { hreflang: "pl", ogLocale: "pl_PL" },
+  uk: { hreflang: "uk", ogLocale: "uk_UA" },
+  es: { hreflang: "es", ogLocale: "es_ES" },
+  it: { hreflang: "it", ogLocale: "it_IT" },
+  pt: { hreflang: "pt", ogLocale: "pt_BR" },
+  ru: { hreflang: "ru", ogLocale: "ru_RU" },
+  cs: { hreflang: "cs", ogLocale: "cs_CZ" },
+  ja: { hreflang: "ja", ogLocale: "ja_JP" },
+  ko: { hreflang: "ko", ogLocale: "ko_KR" },
+  zh: { hreflang: "zh-Hans", ogLocale: "zh_CN" },
+  ar: { hreflang: "ar", ogLocale: "ar_SA" },
+  tr: { hreflang: "tr", ogLocale: "tr_TR" },
+  nl: { hreflang: "nl", ogLocale: "nl_NL" },
+  sv: { hreflang: "sv", ogLocale: "sv_SE" },
+};
+
 interface SeoHeadProps {
-  /** Path without language prefix, e.g. "/cocktails" or "/recipe/mojito" */
   path: string;
   title: string;
   description?: string;
-  /** Override available languages (e.g. only those with translations) */
   availableLangs?: LangCode[];
 }
 
-/**
- * Manages <head> tags: canonical, hreflang, title, meta description.
- * Cleans up on unmount.
- */
 export default function SeoHead({ path, title, description, availableLangs }: SeoHeadProps) {
   const { lang, languages } = useLanguage();
 
   useEffect(() => {
-    // Set document title
+    const managedElements: HTMLElement[] = [];
+
+    // Title
     document.title = title;
 
     // Meta description
@@ -29,13 +46,37 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
       metaDesc = document.createElement("meta");
       metaDesc.setAttribute("name", "description");
       document.head.appendChild(metaDesc);
+      managedElements.push(metaDesc);
     }
-    metaDesc.content = description || title;
+    metaDesc.content = (description || title).slice(0, 160);
 
     // OG tags
+    const currentLocale = LANG_LOCALE_MAP[lang]?.ogLocale || "en_US";
     setMetaProperty("og:title", title);
-    setMetaProperty("og:description", description || title);
+    setMetaProperty("og:description", (description || title).slice(0, 160));
     setMetaProperty("og:url", buildUrl(lang, path));
+    setMetaProperty("og:locale", currentLocale);
+    setMetaProperty("og:type", "website");
+    setMetaProperty("og:site_name", "Cocktail Craft");
+
+    // OG locale alternates
+    const activeLangs = availableLangs ||
+      languages.filter(l => l.is_active).map(l => l.code as LangCode);
+
+    // Remove old og:locale:alternate
+    document.querySelectorAll('meta[property="og:locale:alternate"]').forEach(el => el.remove());
+
+    activeLangs.forEach((code) => {
+      if (code === lang) return;
+      const locale = LANG_LOCALE_MAP[code]?.ogLocale;
+      if (locale) {
+        const meta = document.createElement("meta");
+        meta.setAttribute("property", "og:locale:alternate");
+        meta.content = locale;
+        document.head.appendChild(meta);
+        managedElements.push(meta);
+      }
+    });
 
     // Canonical
     let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
@@ -47,22 +88,19 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
     canonical.href = buildUrl(lang, path);
 
     // Hreflang links
-    const activeLangs = availableLangs || 
-      languages.filter(l => l.is_active).map(l => l.code as LangCode);
-    
     const hreflangElements: HTMLLinkElement[] = [];
 
-    // Add hreflang for each active language
     activeLangs.forEach((code) => {
+      const hreflang = LANG_LOCALE_MAP[code]?.hreflang || code;
       const link = document.createElement("link");
       link.rel = "alternate";
-      link.hreflang = code;
+      link.hreflang = hreflang;
       link.href = buildUrl(code as LangCode, path);
       document.head.appendChild(link);
       hreflangElements.push(link);
     });
 
-    // x-default points to default language
+    // x-default
     const xDefault = document.createElement("link");
     xDefault.rel = "alternate";
     xDefault.hreflang = "x-default";
@@ -70,11 +108,14 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
     document.head.appendChild(xDefault);
     hreflangElements.push(xDefault);
 
-    // Set html lang attribute
-    document.documentElement.lang = lang;
+    // HTML lang attribute
+    document.documentElement.lang = LANG_LOCALE_MAP[lang]?.hreflang || lang;
 
     return () => {
       hreflangElements.forEach((el) => el.remove());
+      managedElements.forEach((el) => {
+        if (el.parentNode) el.remove();
+      });
     };
   }, [lang, path, title, description, languages, availableLangs]);
 
