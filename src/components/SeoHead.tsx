@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLanguage, SUPPORTED_LANGS, DEFAULT_LANG, type LangCode } from "@/hooks/useLanguage";
 
-const SITE_URL = "https://cocktailcraft.com"; // TODO: replace with actual domain
+const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://cocktailcraft.com";
 
 interface SeoHeadProps {
   /** Path without language prefix, e.g. "/cocktails" or "/recipe/mojito" */
