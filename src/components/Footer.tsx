@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
+import { Mail } from "lucide-react";
+import ContactDialog from "@/components/ContactDialog";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -28,6 +30,14 @@ export default function Footer() {
             <Link to={localePath("/search")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
               {t("nav.search", "Search")}
             </Link>
+            <ContactDialog
+              trigger={
+                <button className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Mail className="h-3.5 w-3.5" />
+                  {t("nav.contact", "Contact")}
+                </button>
+              }
+            />
           </nav>
 
           <div className="text-center md:text-right">
