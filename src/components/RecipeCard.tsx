@@ -40,7 +40,7 @@ function RecipeCard({ recipe }: { recipe: DBRecipeLight }) {
 
       <div className="flex-1 min-w-0 w-full self-center">
         <div className="flex items-start gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
-          {recipe.ingredients.map((ing, i) => (
+          {(recipe.ingredients || []).map((ing, i) => (
             <div key={ing.name + i} className="flex items-start gap-0">
               <Link
                 to={localePath(`/ingredient/${ing.slug}`)}
