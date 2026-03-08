@@ -66,7 +66,7 @@ export default function RecipePage() {
       position: i + 1,
       text: step,
     })),
-    ...(recipe.reviews_avg ? { aggregateRating: { "@type": "AggregateRating", ratingValue: recipe.reviews_avg, reviewCount: recipe.reviews_count } } : {}),
+    ...(recipe.reviews_count !== undefined && recipe.reviews_count > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: recipe.reviews_avg, reviewCount: recipe.reviews_count } } : {}),
   } : undefined;
 
   const breadcrumbJsonLd = recipe ? {
