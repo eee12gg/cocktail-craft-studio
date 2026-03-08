@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const SUPPORTED_LANGS = ["en", "de", "fr", "pl", "uk"] as const;
+export const SUPPORTED_LANGS = ["en", "de", "fr", "pl", "uk", "it", "es", "pt", "cs", "nl", "el", "sv", "sk", "lv", "ro", "ka", "bg"] as const;
 export type LangCode = (typeof SUPPORTED_LANGS)[number];
 export const DEFAULT_LANG: LangCode = "en";
 
