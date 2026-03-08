@@ -42,8 +42,8 @@ export default function IngredientsPage() {
     <div className="min-h-screen pt-24 pb-12">
       <SeoHead
         path="/ingredients"
-        title="Ingredients — Cocktail Craft"
-        description="Browse all cocktail ingredients by type — spirits, liqueurs, syrups, juices, fruits, and more."
+        title={`${t("nav.ingredients", "Ingredients")} — Cocktail Craft`}
+        description={t("seo.ingredients_desc", "Browse all cocktail ingredients by type — spirits, liqueurs, syrups, juices, fruits, and more.")}
       />
       <div className="container mx-auto px-4">
         <div className="mb-8">
