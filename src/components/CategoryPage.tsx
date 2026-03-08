@@ -2,12 +2,16 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Search } from "lucide-react";
 import { useRecipesByCategory, type DBRecipe } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SeoHead from "./SeoHead";
 import RecipeCard from "./RecipeCard";
 
 type Category = "cocktails" | "shots" | "non-alcoholic";
 
-const PAGE_SIZE = 20;
+const INITIAL_MOBILE = 6;
+const INITIAL_DESKTOP = 10;
+const LOAD_MORE_MOBILE = 6;
+const LOAD_MORE_DESKTOP = 10;
 
 const categoryTitles: Record<Category, string> = {
   cocktails: "Cocktails",
