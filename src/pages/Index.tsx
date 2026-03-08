@@ -7,7 +7,7 @@ import { ArrowRight, Wine, Zap, Leaf } from "lucide-react";
 
 export default function Index() {
   const { data: recipes, isLoading } = useRecipes();
-  const { localePath, t } = useLanguage();
+  const { localePath, t, lang } = useLanguage();
   const featured = (recipes || []).filter((r) => r.badge).slice(0, 6);
 
   const categories = [
@@ -16,16 +16,44 @@ export default function Index() {
     { label: t("nav.non_alcoholic", "Non-Alcoholic"), path: "/non-alcoholic", icon: Leaf, description: t("cat.non_alcoholic_desc", "Refreshing mocktails") },
   ];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Cocktail Craft",
+    url: "https://cocktailcraft.com",
+    description: t("seo.home_desc", "Explore expertly curated cocktail recipes — from timeless classics to bold new creations."),
+    inLanguage: lang,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://cocktailcraft.com/search?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div className="min-h-screen">
       <SeoHead
         path="/"
         title={t("seo.home_title", "Cocktail Craft — Discover Perfect Cocktail Recipes")}
         description={t("seo.home_desc", "Explore expertly curated cocktail recipes — from timeless classics to bold new creations. Cocktails, shots, and non-alcoholic mocktails.")}
+        jsonLd={jsonLd}
       />
 
+      {/* Hero / H1 */}
+      <section className="container mx-auto px-4 pt-24 pb-8 text-center">
+        <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+          {t("home.h1", "Discover Perfect Cocktail Recipes")}
+        </h1>
+        <p className="mt-3 font-body text-lg text-muted-foreground max-w-2xl mx-auto">
+          {t("home.subtitle", "From timeless classics to bold new creations — find your next favorite drink.")}
+        </p>
+      </section>
+
       {/* Categories */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-8">
         <div className="grid gap-4 sm:grid-cols-3">
           {categories.map((cat, i) => (
             <Link key={cat.path} to={localePath(cat.path)} className="group flex items-center gap-4 rounded-xl border border-border/50 bg-gradient-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-glow animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
@@ -33,7 +61,7 @@ export default function Index() {
                 <cat.icon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-display text-lg font-semibold text-foreground">{cat.label}</h3>
+                <h2 className="font-display text-lg font-semibold text-foreground">{cat.label}</h2>
                 <p className="font-body text-sm text-muted-foreground">{cat.description}</p>
               </div>
               <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
