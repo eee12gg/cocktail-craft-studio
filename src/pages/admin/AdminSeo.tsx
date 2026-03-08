@@ -53,11 +53,17 @@ interface SeoIssue {
 const SITE_URL = "https://cocktailcraft.com";
 
 export default function AdminSeo() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [descSearch, setDescSearch] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>("issues");
   const [siteTitle, setSiteTitle] = useState("Cocktail Craft");
   const [siteDescription, setSiteDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [savingDesc, setSavingDesc] = useState(false);
+  const [descFilter, setDescFilter] = useState<"all" | "missing" | "short" | "long">("all");
 
   // Fetch languages
   const { data: languages = [] } = useQuery({
