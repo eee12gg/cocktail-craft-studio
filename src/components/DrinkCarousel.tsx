@@ -60,8 +60,8 @@ export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
         </div>
       </div>
       <div className="flex gap-3">
-        <button onClick={() => setActiveSlide(0)} className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${activeSlide === 0 ? "bg-primary text-primary-foreground shadow-glow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>Recipe</button>
-        <button onClick={() => setActiveSlide(1)} className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${activeSlide === 1 ? "bg-primary text-primary-foreground shadow-glow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>Tools</button>
+        <button onClick={() => setActiveSlide(0)} className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${activeSlide === 0 ? "bg-primary text-primary-foreground shadow-glow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>{t("recipe.recipe", "Recipe")}</button>
+        <button onClick={() => setActiveSlide(1)} className={`flex-1 rounded-lg py-2.5 font-body text-sm font-semibold transition-all ${activeSlide === 1 ? "bg-primary text-primary-foreground shadow-glow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>{t("recipe.tools", "Tools")}</button>
       </div>
     </div>
   );

@@ -93,7 +93,7 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
             <div key={review.id} className="rounded-xl border border-border/50 bg-gradient-card p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-body text-sm font-semibold text-foreground">{review.author_name}</span>
-                <span className="font-body text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
+                <span className="font-body text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString(lang === "uk" ? "uk-UA" : lang === "de" ? "de-DE" : lang === "fr" ? "fr-FR" : lang === "pl" ? "pl-PL" : "en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
               </div>
               <StarRating rating={review.rating} />
               <p className="font-body text-sm text-muted-foreground leading-relaxed">{review.text}</p>
