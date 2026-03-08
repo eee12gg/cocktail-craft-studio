@@ -7,6 +7,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const DISPLAY_CODE: Record<string, string> = {
+  en: "EN",
+  de: "DE",
+  fr: "FR",
+  pl: "PL",
+  uk: "UA",
+};
+
 export default function LanguageSwitcher() {
   const { lang, languages, switchLang } = useLanguage();
 
@@ -16,7 +24,7 @@ export default function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex h-9 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground transition-colors hover:text-primary focus:outline-none">
         <Globe className="h-4 w-4" />
-        <span className="text-sm font-body font-medium uppercase">{lang}</span>
+        <span className="text-sm font-body font-medium">{DISPLAY_CODE[lang] || lang.toUpperCase()}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[160px]">
         {languages.map((l) => (
