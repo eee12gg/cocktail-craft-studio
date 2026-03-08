@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { DBRecipe } from "@/hooks/useRecipes";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface DrinkCarouselProps {
   recipe: DBRecipe;
