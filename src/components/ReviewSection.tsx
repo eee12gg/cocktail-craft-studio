@@ -32,6 +32,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
   const [text, setText] = useState("");
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [submitCount, setSubmitCount] = useState(0);
+  const [rateLimited, setRateLimited] = useState(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
