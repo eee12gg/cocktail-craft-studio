@@ -1,9 +1,11 @@
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage, SUPPORTED_LANGS, DEFAULT_LANG, type LangCode } from "@/hooks/useLanguage";
 
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://cocktailcraft.com";
 
-/** Map language codes to full locale + region for hreflang & og:locale */
+/** Map language codes to full locale for og:locale */
 const LANG_LOCALE_MAP: Record<string, { hreflang: string; ogLocale: string }> = {
   en: { hreflang: "en", ogLocale: "en_US" },
   de: { hreflang: "de", ogLocale: "de_DE" },
@@ -15,11 +17,6 @@ const LANG_LOCALE_MAP: Record<string, { hreflang: string; ogLocale: string }> = 
   pt: { hreflang: "pt", ogLocale: "pt_BR" },
   ru: { hreflang: "ru", ogLocale: "ru_RU" },
   cs: { hreflang: "cs", ogLocale: "cs_CZ" },
-  ja: { hreflang: "ja", ogLocale: "ja_JP" },
-  ko: { hreflang: "ko", ogLocale: "ko_KR" },
-  zh: { hreflang: "zh-Hans", ogLocale: "zh_CN" },
-  ar: { hreflang: "ar", ogLocale: "ar_SA" },
-  tr: { hreflang: "tr", ogLocale: "tr_TR" },
   nl: { hreflang: "nl", ogLocale: "nl_NL" },
   sv: { hreflang: "sv", ogLocale: "sv_SE" },
   sk: { hreflang: "sk", ogLocale: "sk_SK" },
@@ -30,6 +27,11 @@ const LANG_LOCALE_MAP: Record<string, { hreflang: string; ogLocale: string }> = 
   el: { hreflang: "el", ogLocale: "el_GR" },
 };
 
+interface CountryTarget {
+  country_code: string;
+  language_code: string;
+}
+
 interface SeoHeadProps {
   path: string;
   title: string;
@@ -39,6 +41,18 @@ interface SeoHeadProps {
 
 export default function SeoHead({ path, title, description, availableLangs }: SeoHeadProps) {
   const { lang, languages } = useLanguage();
+
+  // Fetch country-language targets for regional hreflang
+  const { data: countryTargets = [] } = useQuery({
+    queryKey: ["country-language-targets"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("country_language_targets")
+        .select("country_code, language_code");
+      return (data || []) as CountryTarget[];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   useEffect(() => {
     const managedElements: HTMLElement[] = [];
@@ -69,7 +83,6 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
     const activeLangs = availableLangs ||
       languages.filter(l => l.is_active).map(l => l.code as LangCode);
 
-    // Remove old og:locale:alternate
     document.querySelectorAll('meta[property="og:locale:alternate"]').forEach(el => el.remove());
 
     activeLangs.forEach((code) => {
@@ -96,12 +109,26 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
     // Hreflang links
     const hreflangElements: HTMLLinkElement[] = [];
 
+    // 1. Generic language hreflang (e.g., hreflang="de")
     activeLangs.forEach((code) => {
       const hreflang = LANG_LOCALE_MAP[code]?.hreflang || code;
       const link = document.createElement("link");
       link.rel = "alternate";
       link.hreflang = hreflang;
       link.href = buildUrl(code as LangCode, path);
+      document.head.appendChild(link);
+      hreflangElements.push(link);
+    });
+
+    // 2. Country-specific hreflang (e.g., hreflang="de-AT", "es-MX")
+    // These tell Google which language version to show to users in specific countries
+    countryTargets.forEach((ct) => {
+      if (!activeLangs.includes(ct.language_code as any)) return;
+      const hreflang = `${ct.language_code}-${ct.country_code}`;
+      const link = document.createElement("link");
+      link.rel = "alternate";
+      link.hreflang = hreflang;
+      link.href = buildUrl(ct.language_code as LangCode, path);
       document.head.appendChild(link);
       hreflangElements.push(link);
     });
@@ -123,7 +150,7 @@ export default function SeoHead({ path, title, description, availableLangs }: Se
         if (el.parentNode) el.remove();
       });
     };
-  }, [lang, path, title, description, languages, availableLangs]);
+  }, [lang, path, title, description, languages, availableLangs, countryTargets]);
 
   return null;
 }

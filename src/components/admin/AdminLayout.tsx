@@ -14,6 +14,7 @@ import {
   Wrench,
   Tag,
   Video,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export default function AdminLayout() {
     { label: "Видео", path: `${base}/videos`, icon: Video },
     { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
     { label: "Языки", path: `${base}/languages`, icon: Globe },
+    { label: "Страны", path: `${base}/countries`, icon: MapPin },
     { label: "Настройки", path: `${base}/settings`, icon: Settings },
   ];
 
