@@ -8,6 +8,7 @@ interface DrinkCarouselProps {
 
 export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
   const [activeSlide, setActiveSlide] = useState(0);
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState<number | undefined>(undefined);
   const slide0Ref = useRef<HTMLDivElement>(null);
