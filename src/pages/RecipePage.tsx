@@ -156,7 +156,7 @@ export default function RecipePage() {
       {seoHead}
       <div className="relative">
         {recipe.image_url ? (
-          <img src={recipe.image_url} alt={recipe.title} className="h-[60vh] w-full bg-card object-contain" />
+          <img src={recipe.image_url} alt={recipe.title} className="h-[60vh] w-full bg-card object-contain" loading="eager" fetchPriority="high" />
         ) : (
           <div className="h-[60vh] w-full bg-card flex items-center justify-center">
             <span className="text-8xl text-muted-foreground">{recipe.title.charAt(0)}</span>
