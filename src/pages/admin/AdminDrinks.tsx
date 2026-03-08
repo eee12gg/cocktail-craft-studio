@@ -108,6 +108,12 @@ export default function AdminDrinks() {
   const [form, setForm] = useState<FormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState(false);
+  const [sortCategory, setSortCategory] = useState<Category>("cocktails");
+  const [sortedRecipes, setSortedRecipes] = useState<RecipeRow[]>([]);
+  const [savingSort, setSavingSort] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   // Reference data
   const [ingredientOptions, setIngredientOptions] = useState<IngredientOption[]>([]);
@@ -120,7 +126,7 @@ export default function AdminDrinks() {
 
   const fetchRecipes = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("recipes").select("*").order("title");
+    const { data, error } = await supabase.from("recipes").select("*").order("sort_order").order("title");
     if (error) toast.error("Ошибка загрузки");
     else setRecipes((data as RecipeRow[]) || []);
     setLoading(false);
