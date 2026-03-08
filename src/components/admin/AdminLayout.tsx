@@ -15,6 +15,7 @@ import {
   Tag,
   Video,
   MapPin,
+  Search,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
