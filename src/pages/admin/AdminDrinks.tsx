@@ -394,10 +394,8 @@ export default function AdminDrinks() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" asChild>
-                      <a href={`/recipe/${r.slug}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                    <Button variant="ghost" size="icon" onClick={() => window.open(`/recipe/${r.slug}`, '_blank')}>
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>

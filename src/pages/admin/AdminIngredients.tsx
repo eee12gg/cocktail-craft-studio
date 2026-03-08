@@ -223,10 +223,8 @@ export default function AdminIngredients() {
                   </TableCell>
                   <TableCell>{getTypeBadge(ing.type)}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" asChild>
-                      <a href={`/ingredient/${ing.slug}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                    <Button variant="ghost" size="icon" onClick={() => window.open(`/ingredient/${ing.slug}`, '_blank')}>
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(ing)}>
                       <Pencil className="h-4 w-4" />
