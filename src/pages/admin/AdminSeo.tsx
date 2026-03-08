@@ -333,6 +333,17 @@ export default function AdminSeo() {
     }
     return list;
   }, [recipes, descFilter, descSearch]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold text-foreground">SEO</h1>
+        <a
+          href={SITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
           <ExternalLink className="h-4 w-4" />
           {SITE_URL.replace("https://", "")}
         </a>
