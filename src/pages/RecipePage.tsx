@@ -25,6 +25,7 @@ export default function RecipePage() {
   const { data: recipe, isLoading } = useRecipeBySlug(slug || "");
   const { data: categoryRecipes } = useRecipesByCategory(recipe?.category || "cocktails");
   const { localePath, t } = useLanguage();
+  const { localePath, t } = useLanguage();
   const isMobile = useIsMobile();
 
   if (isLoading) {

@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { useIngredientBySlug } from "@/hooks/useIngredients";
-import { useRecipes } from "@/hooks/useRecipes";
+import { useRecipes, type DBRecipeLight } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 import SeoHead from "@/components/SeoHead";
 import RecipeCard from "@/components/RecipeCard";
