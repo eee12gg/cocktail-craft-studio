@@ -29,6 +29,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminLanguages from "./pages/admin/AdminLanguages";
 import AdminTools from "./pages/admin/AdminTools";
 import AdminIngredientTypes from "./pages/admin/AdminIngredientTypes";
+import AdminVideos from "./pages/admin/AdminVideos";
 import { Outlet } from "react-router-dom";
 
 const queryClient = new QueryClient();
