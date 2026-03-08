@@ -26,9 +26,13 @@ const categoryDescriptions: Record<Category, string> = {
 };
 
 export default function CategoryPage({ category }: { category: Category }) {
+  const isMobile = useIsMobile();
+  const initialSize = isMobile ? INITIAL_MOBILE : INITIAL_DESKTOP;
+  const loadSize = isMobile ? LOAD_MORE_MOBILE : LOAD_MORE_DESKTOP;
+
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState(initialSize);
   const { t } = useLanguage();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
