@@ -37,6 +37,7 @@ const AdminTools = lazy(() => import("./pages/admin/AdminTools"));
 const AdminIngredientTypes = lazy(() => import("./pages/admin/AdminIngredientTypes"));
 const AdminVideos = lazy(() => import("./pages/admin/AdminVideos"));
 const AdminCountryTargets = lazy(() => import("./pages/admin/AdminCountryTargets"));
+const AdminSeo = lazy(() => import("./pages/admin/AdminSeo"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ function AppRoutes() {
         <Route path="reviews" element={<Suspense fallback={<PageLoader />}><AdminReviews /></Suspense>} />
         <Route path="languages" element={<Suspense fallback={<PageLoader />}><AdminLanguages /></Suspense>} />
         <Route path="countries" element={<Suspense fallback={<PageLoader />}><AdminCountryTargets /></Suspense>} />
+        <Route path="seo" element={<Suspense fallback={<PageLoader />}><AdminSeo /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<PageLoader />}><AdminSettings /></Suspense>} />
       </Route>
 
