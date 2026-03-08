@@ -785,7 +785,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_contact_rate_limited: { Args: { _email: string }; Returns: boolean }
       is_login_rate_limited: { Args: { _email: string }; Returns: boolean }
+      is_review_rate_limited: {
+        Args: { _author_name: string; _recipe_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       alcohol_level: "None" | "Light" | "Medium" | "Strong"

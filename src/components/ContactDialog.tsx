@@ -29,6 +29,8 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [rateLimited, setRateLimited] = useState(false);
+  const [submitCount, setSubmitCount] = useState(0);
 
   const resetForm = () => {
     setName("");
@@ -53,6 +55,13 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
       return;
     }
 
+    // Client-side rate limit check
+    if (submitCount >= 3) {
+      setRateLimited(true);
+      toast.error(t("contact.rate_limit", "Слишком много сообщений. Попробуйте позже."));
+      return;
+    }
+
     setSending(true);
     const { error } = await supabase.from("contact_messages").insert({
       name: result.data.name,
@@ -62,10 +71,16 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
     setSending(false);
 
     if (error) {
-      toast.error(t("contact.error", "Ошибка отправки. Попробуйте позже."));
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        setRateLimited(true);
+        toast.error(t("contact.rate_limit", "Слишком много сообщений. Попробуйте позже."));
+      } else {
+        toast.error(t("contact.error", "Ошибка отправки. Попробуйте позже."));
+      }
       return;
     }
 
+    setSubmitCount((c) => c + 1);
     setSent(true);
   };
 
@@ -157,7 +172,7 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
               </div>
             </div>
 
-            <Button type="submit" disabled={sending} className="w-full">
+            <Button type="submit" disabled={sending || rateLimited} className="w-full">
               <Send className="mr-2 h-4 w-4" />
               {sending ? t("contact.sending", "Отправка...") : t("contact.send", "Отправить")}
             </Button>

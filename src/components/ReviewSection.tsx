@@ -32,6 +32,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
   const [text, setText] = useState("");
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [submitCount, setSubmitCount] = useState(0);
+  const [rateLimited, setRateLimited] = useState(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -48,7 +50,13 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !text.trim() || rating === 0) return;
+    if (!name.trim() || !text.trim() || rating === 0 || rateLimited) return;
+
+    if (submitCount >= 2) {
+      setRateLimited(true);
+      return;
+    }
+
     setSubmitting(true);
 
     const { data, error } = await supabase.from("reviews").insert({
@@ -58,11 +66,20 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
       text: text.trim().slice(0, 1000),
     }).select().single();
 
-    if (!error && data) {
+    if (error) {
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        setRateLimited(true);
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    if (data) {
       setReviews([data, ...reviews]);
       setName("");
       setText("");
       setRating(0);
+      setSubmitCount((c) => c + 1);
     }
     setSubmitting(false);
   };
@@ -79,8 +96,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
             <span className="font-body text-sm text-muted-foreground">{t("review.rating", "Rating:")}</span>
             <StarRating rating={rating} onRate={setRating} interactive />
           </div>
-          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
-            {submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
+          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting || rateLimited} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
+            {rateLimited ? t("review.rate_limited", "Too many reviews") : submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
           </button>
         </div>
       </form>
