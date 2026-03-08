@@ -193,9 +193,27 @@ export default function AdminLanguages() {
             <DialogTitle>{editingCode ? "Редактировать язык" : "Новый язык"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {!editingCode ? (
+              <div>
+                <Label>Выберите язык *</Label>
+                <LanguageSelect
+                  existingCodes={languages.map(l => l.code)}
+                  value={form.code}
+                  onSelect={(lang) => {
+                    setForm(f => ({
+                      ...f,
+                      code: lang.code,
+                      name: lang.name,
+                      native_name: lang.native_name,
+                      flag_emoji: lang.flag_emoji,
+                    }));
+                  }}
+                />
+              </div>
+            ) : null}
             <div>
               <Label>Код (ISO 639-1) *</Label>
-              <Input value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value }))} placeholder="uk" maxLength={5} disabled={!!editingCode} />
+              <Input value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value }))} placeholder="uk" maxLength={5} disabled={!!editingCode || !!KNOWN_LANGUAGES.find(l => l.code === form.code)} />
             </div>
             <div>
               <Label>Название (EN) *</Label>
