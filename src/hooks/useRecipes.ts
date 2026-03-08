@@ -1,3 +1,12 @@
+/**
+ * Recipe data hooks.
+ *
+ * - useRecipes() — all published recipes (lightweight, for lists)
+ * - useRecipeBySlug(slug) — single recipe with full details
+ * - useRecipesByCategory(cat) — filtered subset by category
+ * - useSearchRecipes(query) — client-side text search (legacy)
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/api";
 import type { RecipeLight, RecipeFull, RecipeIngredient } from "@/api/types";
@@ -8,7 +17,7 @@ export type DBRecipeIngredient = RecipeIngredient;
 export type DBRecipe = RecipeFull;
 export type DBRecipeLight = RecipeLight;
 
-/** Light recipes list — for home, category, search pages */
+/** All published recipes (lightweight list) */
 export function useRecipes() {
   const { lang } = useLanguage();
   return useQuery({
@@ -18,7 +27,7 @@ export function useRecipes() {
   });
 }
 
-/** Full single recipe — for recipe detail page */
+/** Single recipe by slug (full detail with steps, equipment, etc.) */
 export function useRecipeBySlug(slug: string) {
   const { lang } = useLanguage();
   return useQuery({
@@ -29,15 +38,18 @@ export function useRecipeBySlug(slug: string) {
   });
 }
 
+/** Recipes filtered by category */
 export function useRecipesByCategory(category: string) {
   const { data: recipes, ...rest } = useRecipes();
   const filtered = recipes?.filter((r) => r.category === category) || [];
   return { data: filtered, ...rest };
 }
 
+/** Client-side search across recipes (used as fallback) */
 export function useSearchRecipes(query: string) {
   const { data: recipes, ...rest } = useRecipes();
   if (!query.trim()) return { data: [], ...rest };
+
   const q = query.toLowerCase();
   const results = (recipes || []).filter(
     (r) =>

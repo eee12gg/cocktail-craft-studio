@@ -1,9 +1,20 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+/**
+ * Authentication provider and hook.
+ *
+ * Manages admin login/logout with:
+ * - Rate limiting (via DB function `is_login_rate_limited`)
+ * - Session-based auto-logout (browser close = session ends)
+ * - Admin role check (via DB function `has_role`)
+ */
+
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+/** SessionStorage flag — cleared when browser is closed */
 const SESSION_FLAG = "admin_session_active";
 
+/* ─── Types ────────────────────────────────────────────────────────── */
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -15,12 +26,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/* ─── Provider ─────────────────────────────────────────────────────── */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  /** Check if user has admin role via secure DB function */
   const checkAdminRole = async (userId: string) => {
     const { data } = await supabase.rpc("has_role", {
       _user_id: userId,
@@ -29,18 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(!!data);
   };
 
-  // Auto-logout: if browser was closed (sessionStorage cleared) but localStorage session exists
   useEffect(() => {
     const hasSessionFlag = sessionStorage.getItem(SESSION_FLAG);
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          // If no session flag and this is an existing session (not a fresh login), sign out
+          // Auto-logout: browser was closed and reopened (sessionStorage cleared)
           if (!sessionStorage.getItem(SESSION_FLAG) && _event === "INITIAL_SESSION") {
-            // This means browser was reopened — force logout
             await supabase.auth.signOut();
             setIsAdmin(false);
             setLoading(false);
@@ -56,12 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
       if (session?.user) {
         if (!hasSessionFlag) {
-          // Browser was closed/reopened — sign out
+          // Browser was closed/reopened — force logout
           supabase.auth.signOut();
           setIsAdmin(false);
           setLoading(false);
@@ -75,7 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  /** Sign in with rate limiting protection */
   const signIn = async (email: string, password: string) => {
+    // Check server-side rate limit (5 failed attempts per 15 min)
     const { data: rateLimited } = await supabase.rpc("is_login_rate_limited", {
       _email: email,
     });
@@ -90,11 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: "Неверный email или пароль" };
     }
 
-    // Mark session as active in this browser tab/session
     sessionStorage.setItem(SESSION_FLAG, "1");
     return { error: null };
   };
 
+  /** Sign out and clear admin state */
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
@@ -107,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/* ─── Hook ─────────────────────────────────────────────────────────── */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within AuthProvider");

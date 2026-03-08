@@ -1,3 +1,13 @@
+/**
+ * Dynamic admin path provider.
+ *
+ * The admin panel URL prefix is stored in the `admin_settings` table
+ * (key: "admin_path"). This allows changing the admin URL at runtime
+ * for security through obscurity.
+ *
+ * Default: /admin → can be changed to e.g. /my-secret-panel
+ */
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,6 +23,7 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
   const [adminPath, setPath] = useState("admin");
   const [loading, setLoading] = useState(true);
 
+  // Load admin path from database on mount
   useEffect(() => {
     supabase
       .from("admin_settings")
@@ -25,6 +36,7 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  /** Update admin path (requires admin role via RLS) */
   const updateAdminPath = async (newPath: string) => {
     const sanitized = newPath.replace(/[^a-zA-Z0-9-_]/g, "").toLowerCase();
     if (!sanitized || sanitized.length < 3) {

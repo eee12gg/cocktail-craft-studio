@@ -1,8 +1,13 @@
 /**
  * Shared types for the content API layer.
- * These types are backend-agnostic — used by both Supabase and Strapi adapters.
+ *
+ * These types are backend-agnostic — used by both Supabase and Strapi
+ * adapters. Any new backend only needs to return data matching these shapes.
  */
 
+/* ─── Recipe types ─────────────────────────────────────────────────── */
+
+/** A single ingredient within a recipe */
 export interface RecipeIngredient {
   name: string;
   slug: string;
@@ -12,6 +17,7 @@ export interface RecipeIngredient {
   image_url: string | null;
 }
 
+/** Lightweight recipe data — used in list/card views */
 export interface RecipeLight {
   id: string;
   slug: string;
@@ -28,11 +34,14 @@ export interface RecipeLight {
   hashtags: string[];
 }
 
+/** Full recipe data — used on the recipe detail page */
 export interface RecipeFull extends RecipeLight {
   equipment: { name: string; image_url: string | null; description: string | null }[];
   instructions: string[];
   recommendations: { id: string; slug: string; title: string; image_url: string | null }[];
 }
+
+/* ─── Ingredient types ─────────────────────────────────────────────── */
 
 export interface Ingredient {
   id: string;
@@ -43,6 +52,8 @@ export interface Ingredient {
   type: string;
 }
 
+/* ─── Language / i18n types ────────────────────────────────────────── */
+
 export interface Language {
   code: string;
   name: string;
@@ -51,6 +62,8 @@ export interface Language {
   is_active: boolean;
   sort_order: number;
 }
+
+/* ─── Search types ─────────────────────────────────────────────────── */
 
 export interface SearchResult {
   recipes: RecipeLight[];
@@ -65,4 +78,5 @@ export interface SearchIngredientResult {
   type: string;
 }
 
+/** Language code alias (flexible string for adapter compatibility) */
 export type LangCode = string;
