@@ -40,14 +40,6 @@ export default function Footer() {
             />
           </nav>
 
-          <div className="text-center md:text-right">
-            <p className="font-body text-sm text-muted-foreground">
-              {t("footer.contact", "Contact us at")}{" "}
-              <a href="mailto:hello@cocktailcraft.com" className="text-primary hover:underline">
-                hello@cocktailcraft.com
-              </a>
-            </p>
-          </div>
         </div>
 
         <div className="mt-8 flex items-center justify-center gap-2 border-t border-border/30 pt-6">
