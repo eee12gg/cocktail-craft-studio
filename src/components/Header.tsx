@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -13,8 +13,10 @@ const navItems = [
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { localePath, t } = useLanguage();
+  const isOnSearch = location.pathname.endsWith("/search");
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -41,12 +43,12 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link
-            to={localePath("/search")}
+          <button
+            onClick={() => isOnSearch ? navigate(-1) : navigate(localePath("/search"))}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary"
           >
-            <Search className="h-5 w-5" />
-          </Link>
+            {isOnSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+          </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary md:hidden"
