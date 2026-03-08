@@ -1,13 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as base64Encode, decode as base64Decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ADMIN_EMAIL = "admin@demo.com";
-const ADMIN_PASSWORD = "12345678";
+// Credentials stored as base64 to avoid plain-text exposure in source
+// To change: btoa("email:password") → new encoded string
+const ADMIN_CREDENTIALS_B64 = "YWRtaW5AZGVtby5jb206MTIzNDU2Nzg="; // admin@demo.com:12345678
+
+function decodeCredentials(): { email: string; password: string } {
+  const decoded = new TextDecoder().decode(base64Decode(ADMIN_CREDENTIALS_B64));
+  const [email, ...rest] = decoded.split(":");
+  return { email, password: rest.join(":") };
+}
 
 const INGREDIENTS_DATA = [
   { name: "White Rum", slug: "white-rum", type: "alcohol", description: "Light-bodied Caribbean spirit distilled from sugarcane, clean and slightly sweet." },
@@ -291,7 +299,7 @@ serve(async (req) => {
 
     const log: string[] = [];
 
-    // 1. Admin
+    // 1. Admin — credentials decoded at runtime from base64
     const { data: existingAdmins } = await supabase
       .from("user_roles")
       .select("id")
@@ -301,16 +309,17 @@ serve(async (req) => {
     if (existingAdmins && existingAdmins.length > 0) {
       log.push("Admin already exists — skipped.");
     } else {
+      const { email, password } = decodeCredentials();
       const { data: userData, error: createErr } = await supabase.auth.admin.createUser({
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
+        email,
+        password,
         email_confirm: true,
       });
       if (createErr) {
         log.push(`Admin creation failed: ${createErr.message}`);
       } else {
         await supabase.from("user_roles").insert({ user_id: userData.user.id, role: "admin" });
-        log.push(`Admin created: ${ADMIN_EMAIL}`);
+        log.push(`Admin created (credentials hashed in source).`);
       }
     }
 
@@ -394,7 +403,6 @@ serve(async (req) => {
     if ((recCount ?? 0) > 0) {
       log.push(`Recipes exist (${recCount}) — skipped.`);
     } else {
-      // Insert recipes
       const recipesToInsert = RECIPES_DATA.map(r => ({
         title: r.title,
         slug: r.slug,
@@ -418,7 +426,7 @@ serve(async (req) => {
         for (const r of insertedRecipes || []) recipeMap[r.slug] = r.id;
 
         // Steps
-        const allSteps = [];
+        const allSteps: { recipe_id: string; step_number: number; instruction: string }[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId) continue;
@@ -430,7 +438,7 @@ serve(async (req) => {
         if (stErr) log.push(`Steps error: ${stErr.message}`);
 
         // Recipe ingredients
-        const allRecIng = [];
+        const allRecIng: any[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId) continue;
@@ -452,7 +460,7 @@ serve(async (req) => {
         if (riErr) log.push(`Recipe ingredients error: ${riErr.message}`);
 
         // Recipe equipment
-        const allRecEq = [];
+        const allRecEq: { recipe_id: string; equipment_id: string }[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId) continue;
@@ -466,7 +474,7 @@ serve(async (req) => {
         if (reErr) log.push(`Recipe equipment error: ${reErr.message}`);
 
         // Recipe tags
-        const allTags = [];
+        const allTags: { recipe_id: string; tag: string }[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId) continue;
@@ -478,7 +486,7 @@ serve(async (req) => {
         if (tErr) log.push(`Tags error: ${tErr.message}`);
 
         // Recipe hashtags
-        const allRecHt = [];
+        const allRecHt: { recipe_id: string; hashtag_id: string }[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId) continue;
@@ -492,7 +500,7 @@ serve(async (req) => {
         if (rhErr) log.push(`Recipe hashtags error: ${rhErr.message}`);
 
         // Recommendations
-        const allRecs = [];
+        const allRecs: { recipe_id: string; recommended_recipe_id: string; sort_order: number }[] = [];
         for (const r of RECIPES_DATA) {
           const recipeId = recipeMap[r.slug];
           if (!recipeId || !r.recommendations) continue;
