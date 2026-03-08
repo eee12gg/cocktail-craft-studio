@@ -129,6 +129,7 @@ export default function CategoryPage({ category }: { category: Category }) {
             )}
           </div>
         )}
+      </div>
     </div>
   );
 }
