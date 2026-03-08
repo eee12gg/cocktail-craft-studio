@@ -29,6 +29,8 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [rateLimited, setRateLimited] = useState(false);
+  const [submitCount, setSubmitCount] = useState(0);
 
   const resetForm = () => {
     setName("");
