@@ -27,6 +27,7 @@ function StarRating({ rating, onRate, interactive = false }: { rating: number; o
 export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: string; recipeSlug: string }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [name, setName] = useState("");
+  const { t, lang } = useLanguage();
   const [text, setText] = useState("");
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
