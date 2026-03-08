@@ -22,6 +22,12 @@ const LANG_LOCALE_MAP: Record<string, { hreflang: string; ogLocale: string }> = 
   tr: { hreflang: "tr", ogLocale: "tr_TR" },
   nl: { hreflang: "nl", ogLocale: "nl_NL" },
   sv: { hreflang: "sv", ogLocale: "sv_SE" },
+  sk: { hreflang: "sk", ogLocale: "sk_SK" },
+  lv: { hreflang: "lv", ogLocale: "lv_LV" },
+  ro: { hreflang: "ro", ogLocale: "ro_RO" },
+  ka: { hreflang: "ka", ogLocale: "ka_GE" },
+  bg: { hreflang: "bg", ogLocale: "bg_BG" },
+  el: { hreflang: "el", ogLocale: "el_GR" },
 };
 
 interface SeoHeadProps {
