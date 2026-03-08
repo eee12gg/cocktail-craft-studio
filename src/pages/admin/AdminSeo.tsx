@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   Search,
@@ -15,6 +15,9 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 interface RecipeSeoData {
