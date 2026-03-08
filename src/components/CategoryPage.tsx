@@ -71,7 +71,7 @@ export default function CategoryPage({ category }: { category: Category }) {
   // Load more handler
   const loadMore = useCallback(() => {
     if (hasMore) {
-      setVisibleCount((prev) => prev + PAGE_SIZE);
+      setVisibleCount((prev) => prev + loadSize);
     }
   }, [hasMore]);
 
