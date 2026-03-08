@@ -132,7 +132,7 @@ export default function CategoryPage({ category }: { category: Category }) {
                 onClick={loadMore}
                 className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-body text-base font-medium tracking-wide transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.99]"
               >
-                {t("category.show_more", "Show")} {Math.min(remaining, PAGE_SIZE)} {t(`cat.${category}`, categoryNameMap[category]).toLowerCase()} {t("category.of_total", "of")} {filtered.length}…
+                {t("category.show_more", "Show")} {Math.min(remaining, loadSize)} {t(`cat.${category}`, categoryNameMap[category]).toLowerCase()} {t("category.of_total", "of")} {filtered.length}…
               </button>
             )}
           </div>
