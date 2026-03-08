@@ -2,12 +2,16 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Search } from "lucide-react";
 import { useRecipesByCategory, type DBRecipe } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SeoHead from "./SeoHead";
 import RecipeCard from "./RecipeCard";
 
 type Category = "cocktails" | "shots" | "non-alcoholic";
 
-const PAGE_SIZE = 20;
+const INITIAL_MOBILE = 6;
+const INITIAL_DESKTOP = 10;
+const LOAD_MORE_MOBILE = 6;
+const LOAD_MORE_DESKTOP = 10;
 
 const categoryTitles: Record<Category, string> = {
   cocktails: "Cocktails",
@@ -22,9 +26,13 @@ const categoryDescriptions: Record<Category, string> = {
 };
 
 export default function CategoryPage({ category }: { category: Category }) {
+  const isMobile = useIsMobile();
+  const initialSize = isMobile ? INITIAL_MOBILE : INITIAL_DESKTOP;
+  const loadSize = isMobile ? LOAD_MORE_MOBILE : LOAD_MORE_DESKTOP;
+
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState(initialSize);
   const { t } = useLanguage();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +62,7 @@ export default function CategoryPage({ category }: { category: Category }) {
 
   // Reset visible count when filter changes
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setVisibleCount(initialSize);
   }, [search, selectedTag, category]);
 
   const visibleRecipes = filtered.slice(0, visibleCount);
@@ -63,7 +71,7 @@ export default function CategoryPage({ category }: { category: Category }) {
   // Load more handler
   const loadMore = useCallback(() => {
     if (hasMore) {
-      setVisibleCount((prev) => prev + PAGE_SIZE);
+      setVisibleCount((prev) => prev + loadSize);
     }
   }, [hasMore]);
 
@@ -124,7 +132,7 @@ export default function CategoryPage({ category }: { category: Category }) {
                 onClick={loadMore}
                 className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-body text-base font-medium tracking-wide transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.99]"
               >
-                {t("category.show_more", "Show")} {Math.min(remaining, PAGE_SIZE)} {t(`cat.${category}`, categoryNameMap[category]).toLowerCase()} {t("category.of_total", "of")} {filtered.length}…
+                {t("category.show_more", "Show")} {Math.min(remaining, loadSize)} {t(`cat.${category}`, categoryNameMap[category]).toLowerCase()} {t("category.of_total", "of")} {filtered.length}…
               </button>
             )}
           </div>
