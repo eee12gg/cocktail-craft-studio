@@ -43,12 +43,12 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link
-            to={localePath("/search")}
+          <button
+            onClick={() => isOnSearch ? navigate(-1) : navigate(localePath("/search"))}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary"
           >
-            <Search className="h-5 w-5" />
-          </Link>
+            {isOnSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+          </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary md:hidden"
