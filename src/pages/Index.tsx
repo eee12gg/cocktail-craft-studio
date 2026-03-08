@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useRecipes, type DBRecipe } from "@/hooks/useRecipes";
+import { useRecipes, type DBRecipeLight } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 import RecipeCard from "@/components/RecipeCard";
 import SeoHead from "@/components/SeoHead";
