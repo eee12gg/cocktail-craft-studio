@@ -11,34 +11,57 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
-import Index from "./pages/Index";
-import CocktailsPage from "./pages/CocktailsPage";
-import ShotsPage from "./pages/ShotsPage";
-import NonAlcoholicPage from "./pages/NonAlcoholicPage";
-import RecipePage from "./pages/RecipePage";
-import SearchPage from "./pages/SearchPage";
-import NotFound from "./pages/NotFound";
-import IngredientPage from "./pages/IngredientPage";
-import IngredientsPage from "./pages/IngredientsPage";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminDrinks from "./pages/admin/AdminDrinks";
-import AdminIngredients from "./pages/admin/AdminIngredients";
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminLanguages from "./pages/admin/AdminLanguages";
-import AdminTools from "./pages/admin/AdminTools";
-import AdminIngredientTypes from "./pages/admin/AdminIngredientTypes";
-import AdminVideos from "./pages/admin/AdminVideos";
 import { Outlet } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
-const queryClient = new QueryClient();
+// Lazy load all pages
+const Index = lazy(() => import("./pages/Index"));
+const CocktailsPage = lazy(() => import("./pages/CocktailsPage"));
+const ShotsPage = lazy(() => import("./pages/ShotsPage"));
+const NonAlcoholicPage = lazy(() => import("./pages/NonAlcoholicPage"));
+const RecipePage = lazy(() => import("./pages/RecipePage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const IngredientPage = lazy(() => import("./pages/IngredientPage"));
+const IngredientsPage = lazy(() => import("./pages/IngredientsPage"));
+
+// Lazy load admin pages
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminDrinks = lazy(() => import("./pages/admin/AdminDrinks"));
+const AdminIngredients = lazy(() => import("./pages/admin/AdminIngredients"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminLanguages = lazy(() => import("./pages/admin/AdminLanguages"));
+const AdminTools = lazy(() => import("./pages/admin/AdminTools"));
+const AdminIngredientTypes = lazy(() => import("./pages/admin/AdminIngredientTypes"));
+const AdminVideos = lazy(() => import("./pages/admin/AdminVideos"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 15 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 function PublicLayout() {
   return (
     <LanguageProvider>
       <Header />
-      <Outlet />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
       <Footer />
     </LanguageProvider>
   );
@@ -62,29 +85,25 @@ function AppRoutes() {
   const { adminPath, loading } = useAdminPath();
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
     <Routes>
-      <Route path={`/${adminPath}/login`} element={<AdminLogin />} />
+      <Route path={`/${adminPath}/login`} element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
       <Route
         path={`/${adminPath}`}
         element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
       >
-        <Route index element={<AdminDashboard />} />
-        <Route path="drinks" element={<AdminDrinks />} />
-        <Route path="ingredients" element={<AdminIngredients />} />
-        <Route path="tools" element={<AdminTools />} />
-        <Route path="ingredient-types" element={<AdminIngredientTypes />} />
-        <Route path="videos" element={<AdminVideos />} />
-        <Route path="reviews" element={<AdminReviews />} />
-        <Route path="languages" element={<AdminLanguages />} />
-        <Route path="settings" element={<AdminSettings />} />
+        <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
+        <Route path="drinks" element={<Suspense fallback={<PageLoader />}><AdminDrinks /></Suspense>} />
+        <Route path="ingredients" element={<Suspense fallback={<PageLoader />}><AdminIngredients /></Suspense>} />
+        <Route path="tools" element={<Suspense fallback={<PageLoader />}><AdminTools /></Suspense>} />
+        <Route path="ingredient-types" element={<Suspense fallback={<PageLoader />}><AdminIngredientTypes /></Suspense>} />
+        <Route path="videos" element={<Suspense fallback={<PageLoader />}><AdminVideos /></Suspense>} />
+        <Route path="reviews" element={<Suspense fallback={<PageLoader />}><AdminReviews /></Suspense>} />
+        <Route path="languages" element={<Suspense fallback={<PageLoader />}><AdminLanguages /></Suspense>} />
+        <Route path="settings" element={<Suspense fallback={<PageLoader />}><AdminSettings /></Suspense>} />
       </Route>
 
       <Route path="/:lang" element={<PublicLayout />}>

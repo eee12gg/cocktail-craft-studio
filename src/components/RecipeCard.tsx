@@ -1,5 +1,6 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
-import type { DBRecipe } from "@/hooks/useRecipes";
+import type { DBRecipeLight } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const badgeColors: Record<string, string> = {
@@ -9,7 +10,7 @@ const badgeColors: Record<string, string> = {
   New: "bg-secondary text-secondary-foreground",
 };
 
-export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
+function RecipeCard({ recipe }: { recipe: DBRecipeLight }) {
   const { localePath } = useLanguage();
 
   return (
@@ -23,7 +24,7 @@ export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
       <Link to={localePath(`/recipe/${recipe.slug}`)} className="flex-shrink-0 flex flex-col items-center w-full md:w-48 group">
         <div className="relative w-40 h-52 md:w-48 md:h-60 overflow-hidden rounded-lg">
           {recipe.image_url ? (
-            <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+            <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center">
               <span className="text-4xl text-muted-foreground">{recipe.title.charAt(0)}</span>
@@ -47,7 +48,7 @@ export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden flex items-center justify-center transition-all group-hover/ing:border-primary/50 group-hover/ing:shadow-glow">
                   {ing.image_url ? (
-                    <img src={ing.image_url} alt={ing.name} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={ing.image_url} alt={ing.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <span className="text-2xl font-display text-muted-foreground">{ing.name.charAt(0)}</span>
                   )}
@@ -66,3 +67,5 @@ export default function RecipeCard({ recipe }: { recipe: DBRecipe }) {
     </div>
   );
 }
+
+export default memo(RecipeCard);
