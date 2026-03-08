@@ -62,7 +62,7 @@ export default function CategoryPage({ category }: { category: Category }) {
 
   // Reset visible count when filter changes
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setVisibleCount(initialSize);
   }, [search, selectedTag, category]);
 
   const visibleRecipes = filtered.slice(0, visibleCount);
