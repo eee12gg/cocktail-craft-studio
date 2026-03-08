@@ -25,6 +25,7 @@ export const supabaseAdapter: ContentAdapter = {
       .from("recipes")
       .select("id, slug, title, category, image_url, description, prep_time, alcohol_level, badge, is_published")
       .eq("is_published", true)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
 
     if (error) throw error;
