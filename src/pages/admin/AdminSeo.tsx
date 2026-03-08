@@ -295,16 +295,44 @@ export default function AdminSeo() {
   const scoreColor = seoScore >= 80 ? "text-green-400" : seoScore >= 50 ? "text-yellow-400" : "text-red-400";
   const scoreBg = seoScore >= 80 ? "bg-green-400/10 border-green-400/30" : seoScore >= 50 ? "bg-yellow-400/10 border-yellow-400/30" : "bg-red-400/10 border-red-400/30";
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-foreground">SEO</h1>
-        <a
-          href={SITE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
+  // Meta description editor logic
+  const handleStartEdit = useCallback((recipe: RecipeSeoData) => {
+    setEditingId(recipe.id);
+    setEditValue(recipe.description || "");
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditValue("");
+  }, []);
+
+  const handleSaveDescription = useCallback(async (recipeId: string) => {
+    setSavingDesc(true);
+    const { error } = await supabase
+      .from("recipes")
+      .update({ description: editValue || null })
+      .eq("id", recipeId);
+    setSavingDesc(false);
+    if (error) {
+      toast.error("Ошибка сохранения");
+      return;
+    }
+    toast.success("Описание обновлено");
+    setEditingId(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-seo-recipes"] });
+  }, [editValue, queryClient]);
+
+  const filteredRecipesForDesc = useMemo(() => {
+    let list = [...recipes];
+    if (descFilter === "missing") list = list.filter((r) => !r.description);
+    else if (descFilter === "short") list = list.filter((r) => r.description && r.description.length < 50);
+    else if (descFilter === "long") list = list.filter((r) => r.description && r.description.length > 160);
+    if (descSearch) {
+      const q = descSearch.toLowerCase();
+      list = list.filter((r) => r.title.toLowerCase().includes(q) || r.slug.includes(q));
+    }
+    return list;
+  }, [recipes, descFilter, descSearch]);
           <ExternalLink className="h-4 w-4" />
           {SITE_URL.replace("https://", "")}
         </a>
