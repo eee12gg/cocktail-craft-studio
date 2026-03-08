@@ -23,30 +23,6 @@ export default function Index() {
         title={t("seo.home_title", "Cocktail Craft — Discover Perfect Cocktail Recipes")}
         description={t("seo.home_desc", "Explore expertly curated cocktail recipes — from timeless classics to bold new creations. Cocktails, shots, and non-alcoholic mocktails.")}
       />
-      {/* Hero */}
-      <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden pt-16">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 50% 50%, hsl(36 80% 50%), transparent 70%)" }} />
-        <div className="container relative z-10 mx-auto px-4 text-center">
-          <h1 className="font-display text-5xl font-bold leading-tight md:text-7xl animate-fade-in">
-            <span className="text-gradient-gold">{t("hero.craft", "Craft")}</span>{" "}
-            <span className="text-foreground">{t("hero.your_perfect", "Your Perfect")}</span>
-            <br />
-            <span className="text-foreground">{t("hero.cocktail", "Cocktail")}</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-lg font-body text-lg text-muted-foreground animate-fade-in" style={{ animationDelay: "200ms" }}>
-            {t("hero.subtitle", "Discover expertly curated recipes — from timeless classics to bold new creations.")}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-            <Link to={localePath("/cocktails")} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-body text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow">
-              {t("hero.explore", "Explore Recipes")} <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link to={localePath("/search")} className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 font-body text-sm font-medium text-foreground transition-colors hover:border-primary/50">
-              {t("nav.search", "Search")}
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Categories */}
       <section className="container mx-auto px-4 py-16">
