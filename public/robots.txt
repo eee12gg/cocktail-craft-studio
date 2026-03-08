@@ -14,5 +14,7 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /*/admin/
+Disallow: /search
+Disallow: /*/search
 
-Sitemap: https://lofgqhtwqmaffqujilcl.supabase.co/functions/v1/sitemap
+Sitemap: https://cocktailcraft.com/sitemap.xml

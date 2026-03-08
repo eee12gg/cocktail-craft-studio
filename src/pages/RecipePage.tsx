@@ -52,11 +52,40 @@ export default function RecipePage() {
     ? recipe.recommendations
     : (categoryRecipes || []).filter((r) => r.id !== recipe.id).slice(0, 3).map((r) => ({ id: r.id, slug: r.slug, title: r.title, image_url: r.image_url }));
 
+  const recipeJsonLd = recipe ? {
+    "@context": "https://schema.org",
+    "@type": "Recipe",
+    name: recipe.title,
+    description: recipe.description || `${recipe.title} recipe`,
+    image: recipe.image_url || undefined,
+    prepTime: recipe.prep_time ? `PT${recipe.prep_time.replace(/[^0-9]/g, '')}M` : undefined,
+    recipeCategory: recipe.category === "non-alcoholic" ? "Mocktail" : recipe.category === "shots" ? "Shot" : "Cocktail",
+    recipeIngredient: recipe.ingredients.map((ing) => `${ing.amount_value || ""} ${ing.amount_unit || ""} ${ing.name}`.trim()),
+    recipeInstructions: recipe.instructions.map((step, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      text: step,
+    })),
+    ...(recipe.reviews_avg ? { aggregateRating: { "@type": "AggregateRating", ratingValue: recipe.reviews_avg, reviewCount: recipe.reviews_count } } : {}),
+  } : undefined;
+
+  const breadcrumbJsonLd = recipe ? {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://cocktailcraft.com" },
+      { "@type": "ListItem", position: 2, name: categoryLabels[recipe.category], item: `https://cocktailcraft.com/${recipe.category}` },
+      { "@type": "ListItem", position: 3, name: recipe.title },
+    ],
+  } : undefined;
+
   const seoHead = recipe ? (
     <SeoHead
       path={`/recipe/${recipe.slug}`}
       title={`${recipe.title} — Cocktail Craft`}
       description={recipe.description || `${recipe.title} recipe`}
+      ogImage={recipe.image_url || undefined}
+      jsonLd={recipeJsonLd && breadcrumbJsonLd ? [recipeJsonLd, breadcrumbJsonLd] : undefined}
     />
   ) : null;
 

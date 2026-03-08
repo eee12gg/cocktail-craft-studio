@@ -43,12 +43,24 @@ const IngredientPage = () => {
     ? ingredient.description!.slice(0, 300) + "..."
     : ingredient.description;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://cocktailcraft.com" },
+      { "@type": "ListItem", position: 2, name: t("nav.ingredients", "Ingredients"), item: "https://cocktailcraft.com/ingredients" },
+      { "@type": "ListItem", position: 3, name: ingredient.name },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SeoHead
         path={`/ingredient/${ingredient.slug}`}
         title={`${ingredient.name} — Cocktail Craft`}
         description={(ingredient.description || ingredient.name).slice(0, 160)}
+        ogImage={ingredient.image_url || undefined}
+        jsonLd={breadcrumbJsonLd}
       />
 
       <div className="max-w-2xl mx-auto px-4 pt-24 pb-8 space-y-8">
