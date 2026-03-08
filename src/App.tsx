@@ -37,6 +37,7 @@ const AdminTools = lazy(() => import("./pages/admin/AdminTools"));
 const AdminIngredientTypes = lazy(() => import("./pages/admin/AdminIngredientTypes"));
 const AdminVideos = lazy(() => import("./pages/admin/AdminVideos"));
 const AdminCountryTargets = lazy(() => import("./pages/admin/AdminCountryTargets"));
+const AdminSeo = lazy(() => import("./pages/admin/AdminSeo"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
