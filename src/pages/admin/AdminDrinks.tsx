@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import ImageUpload from "@/components/admin/ImageUpload";
-import { Plus, Pencil, Trash2, Search, GlassWater, X, GripVertical, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, GlassWater, X, GripVertical, ExternalLink, ArrowUpDown, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import TranslationTabs from "@/components/admin/TranslationTabs";
 
@@ -50,6 +50,7 @@ interface RecipeRow {
   badge: string | null;
   is_published: boolean;
   created_at: string;
+  sort_order: number;
 }
 
 interface IngredientOption { id: string; name: string; }
@@ -107,6 +108,12 @@ export default function AdminDrinks() {
   const [form, setForm] = useState<FormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState(false);
+  const [sortCategory, setSortCategory] = useState<Category>("cocktails");
+  const [sortedRecipes, setSortedRecipes] = useState<RecipeRow[]>([]);
+  const [savingSort, setSavingSort] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   // Reference data
   const [ingredientOptions, setIngredientOptions] = useState<IngredientOption[]>([]);
@@ -119,7 +126,7 @@ export default function AdminDrinks() {
 
   const fetchRecipes = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("recipes").select("*").order("title");
+    const { data, error } = await supabase.from("recipes").select("*").order("sort_order").order("title");
     if (error) toast.error("Ошибка загрузки");
     else setRecipes((data as RecipeRow[]) || []);
     setLoading(false);
@@ -336,75 +343,189 @@ export default function AdminDrinks() {
     }
   };
 
+  // Sort mode helpers
+  const enterSortMode = (cat: Category) => {
+    setSortCategory(cat);
+    const catRecipes = recipes.filter((r) => r.category === cat).sort((a, b) => a.sort_order - b.sort_order);
+    setSortedRecipes(catRecipes);
+    setSortMode(true);
+  };
+
+  const moveItem = (from: number, to: number) => {
+    setSortedRecipes((prev) => {
+      const copy = [...prev];
+      const [item] = copy.splice(from, 1);
+      copy.splice(to, 0, item);
+      return copy;
+    });
+  };
+
+  const handleDragStart = (index: number) => { dragItem.current = index; };
+  const handleDragEnter = (index: number) => { dragOverItem.current = index; };
+  const handleDragEnd = () => {
+    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+      moveItem(dragItem.current, dragOverItem.current);
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
+  const saveSortOrder = async () => {
+    setSavingSort(true);
+    try {
+      const updates = sortedRecipes.map((r, i) => 
+        supabase.from("recipes").update({ sort_order: i + 1 } as any).eq("id", r.id)
+      );
+      await Promise.all(updates);
+      toast.success("Порядок сохранён");
+      setSortMode(false);
+      fetchRecipes();
+    } catch {
+      toast.error("Ошибка сохранения порядка");
+    }
+    setSavingSort(false);
+  };
+
   const filtered = recipes.filter((r) => r.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="font-display text-2xl font-bold text-foreground">Напитки</h1>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Добавить</Button>
+        <div className="flex gap-2">
+          {!sortMode && (
+            <Select onValueChange={(v) => enterSortMode(v as Category)}>
+              <SelectTrigger className="w-auto gap-2">
+                <ArrowUpDown className="h-4 w-4" />
+                <SelectValue placeholder="Сортировка" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>Сортировать: {c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Добавить</Button>
+        </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Поиск..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-      </div>
+      {sortMode ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                Сортировка: {CATEGORIES.find((c) => c.value === sortCategory)?.label} ({sortedRecipes.length})
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setSortMode(false)}>Отмена</Button>
+              <Button size="sm" onClick={saveSortOrder} disabled={savingSort}>
+                <Save className="h-4 w-4 mr-1" /> {savingSort ? "Сохранение..." : "Сохранить порядок"}
+              </Button>
+            </div>
+          </div>
 
-      {loading ? (
-        <div className="text-center py-12 text-muted-foreground">Загрузка...</div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card p-12 text-center">
-          <GlassWater className="mb-4 h-12 w-12 text-muted-foreground" />
-          <p className="text-muted-foreground">{search ? "Ничего не найдено" : "Пока нет напитков. Создайте первый!"}</p>
+          <div className="space-y-1">
+            {sortedRecipes.map((r, i) => (
+              <div
+                key={r.id}
+                draggable
+                onDragStart={() => handleDragStart(i)}
+                onDragEnter={() => handleDragEnter(i)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 cursor-grab active:cursor-grabbing hover:border-primary/20 transition-colors"
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm font-medium text-muted-foreground w-8">{i + 1}</span>
+                {r.image_thumb_url ? (
+                  <img src={r.image_thumb_url} alt={r.title} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                    <GlassWater className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                )}
+                <span className="text-sm font-medium text-foreground flex-1">{r.title}</span>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" disabled={i === 0} onClick={() => moveItem(i, i - 1)}>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" disabled={i === sortedRecipes.length - 1} onClick={() => moveItem(i, i + 1)}>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14"></TableHead>
-                <TableHead>Название</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    {r.image_thumb_url ? (
-                      <img src={r.image_thumb_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                        <GlassWater className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{r.title}</div>
-                    {r.badge && <Badge variant="secondary" className="mt-1">{r.badge}</Badge>}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{CATEGORIES.find((c) => c.value === r.category)?.label}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={r.is_published ? "default" : "secondary"}>
-                      {r.is_published ? "Опубликован" : "Черновик"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => window.open(`/recipe/${r.slug}`, '_blank')}>
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Поиск..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">Загрузка...</div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card p-12 text-center">
+              <GlassWater className="mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground">{search ? "Ничего не найдено" : "Пока нет напитков. Создайте первый!"}</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10 text-center">#</TableHead>
+                    <TableHead className="w-14"></TableHead>
+                    <TableHead>Название</TableHead>
+                    <TableHead>Категория</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead className="text-right">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-center text-xs text-muted-foreground">{r.sort_order || "—"}</TableCell>
+                      <TableCell>
+                        {r.image_thumb_url ? (
+                          <img src={r.image_thumb_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                            <GlassWater className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{r.title}</div>
+                        {r.badge && <Badge variant="secondary" className="mt-1">{r.badge}</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{CATEGORIES.find((c) => c.value === r.category)?.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={r.is_published ? "default" : "secondary"}>
+                          {r.is_published ? "Опубликован" : "Черновик"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => window.open(`/recipe/${r.slug}`, '_blank')}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </>
       )}
 
       {/* Recipe editor dialog */}
