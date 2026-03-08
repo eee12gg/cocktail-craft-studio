@@ -29,6 +29,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminLanguages from "./pages/admin/AdminLanguages";
 import AdminTools from "./pages/admin/AdminTools";
 import AdminIngredientTypes from "./pages/admin/AdminIngredientTypes";
+import AdminVideos from "./pages/admin/AdminVideos";
 import { Outlet } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ function AppRoutes() {
         <Route path="ingredients" element={<AdminIngredients />} />
         <Route path="tools" element={<AdminTools />} />
         <Route path="ingredient-types" element={<AdminIngredientTypes />} />
+        <Route path="videos" element={<AdminVideos />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="languages" element={<AdminLanguages />} />
         <Route path="settings" element={<AdminSettings />} />

@@ -584,6 +584,7 @@ export type Database = {
           slug: string
           title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           alcohol_level?: Database["public"]["Enums"]["alcohol_level"]
@@ -599,6 +600,7 @@ export type Database = {
           slug: string
           title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           alcohol_level?: Database["public"]["Enums"]["alcohol_level"]
@@ -614,6 +616,7 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
