@@ -60,25 +60,21 @@ export default function CategoryPage({ category }: { category: Category }) {
   const visibleRecipes = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
 
-  // Intersection Observer for infinite scroll
+  // Load more handler
   const loadMore = useCallback(() => {
     if (hasMore) {
       setVisibleCount((prev) => prev + PAGE_SIZE);
     }
   }, [hasMore]);
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
-      { rootMargin: "200px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [loadMore]);
+  const remaining = filtered.length - visibleCount;
+
+  // Category name for button text
+  const categoryNameMap: Record<Category, string> = {
+    cocktails: "cocktails",
+    shots: "shots",
+    "non-alcoholic": "mocktails",
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12">
@@ -122,17 +118,17 @@ export default function CategoryPage({ category }: { category: Category }) {
               </div>
             ))}
 
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="flex justify-center py-8">
-              {hasMore ? (
-                <p className="font-body text-sm text-muted-foreground animate-pulse">{t("category.loading_more", "Loading recipes...")}</p>
-              ) : filtered.length > PAGE_SIZE ? (
-                <p className="font-body text-sm text-muted-foreground">{t("category.no_more", "No more recipes")}</p>
-              ) : null}
-            </div>
+            {/* Load more button */}
+            {hasMore && (
+              <button
+                onClick={loadMore}
+                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-body text-base font-medium tracking-wide transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.99]"
+              >
+                {t("category.show_more", "Show")} {Math.min(remaining, PAGE_SIZE)} {t(`cat.${category}`, categoryNameMap[category]).toLowerCase()} {t("category.of_total", "of")} {filtered.length}…
+              </button>
+            )}
           </div>
         )}
-      </div>
     </div>
   );
 }
