@@ -41,7 +41,7 @@ export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
             </ol>
           </div>
           <div ref={slide1Ref} className="w-full flex-shrink-0 p-5">
-            <h3 className="font-display text-xl font-bold text-foreground mb-4">Bar Tools</h3>
+            <h3 className="font-display text-xl font-bold text-foreground mb-4">{t("recipe.bar_tools", "Bar Tools")}</h3>
             <ul className="space-y-3">
               {recipe.equipment.map((eq) => (
                 <li key={eq.name} className="flex items-center gap-3">
