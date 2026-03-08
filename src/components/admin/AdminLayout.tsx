@@ -38,6 +38,7 @@ export default function AdminLayout() {
     { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
     { label: "Языки", path: `${base}/languages`, icon: Globe },
     { label: "Страны", path: `${base}/countries`, icon: MapPin },
+    { label: "SEO", path: `${base}/seo`, icon: Search },
     { label: "Настройки", path: `${base}/settings`, icon: Settings },
   ];
 
