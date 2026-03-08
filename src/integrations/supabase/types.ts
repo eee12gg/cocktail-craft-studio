@@ -35,6 +35,41 @@ export type Database = {
         }
         Relationships: []
       }
+      country_language_targets: {
+        Row: {
+          country_code: string
+          country_name: string
+          created_at: string
+          flag_emoji: string
+          id: string
+          language_code: string
+        }
+        Insert: {
+          country_code: string
+          country_name: string
+          created_at?: string
+          flag_emoji?: string
+          id?: string
+          language_code: string
+        }
+        Update: {
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          flag_emoji?: string
+          id?: string
+          language_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_language_targets_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       equipment: {
         Row: {
           created_at: string
