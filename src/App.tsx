@@ -104,6 +104,7 @@ function AppRoutes() {
         <Route path="videos" element={<Suspense fallback={<PageLoader />}><AdminVideos /></Suspense>} />
         <Route path="reviews" element={<Suspense fallback={<PageLoader />}><AdminReviews /></Suspense>} />
         <Route path="languages" element={<Suspense fallback={<PageLoader />}><AdminLanguages /></Suspense>} />
+        <Route path="countries" element={<Suspense fallback={<PageLoader />}><AdminCountryTargets /></Suspense>} />
         <Route path="settings" element={<Suspense fallback={<PageLoader />}><AdminSettings /></Suspense>} />
       </Route>
 
