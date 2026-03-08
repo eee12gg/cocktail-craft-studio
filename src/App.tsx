@@ -1,20 +1,31 @@
+/**
+ * App.tsx — Root application component.
+ *
+ * Architecture:
+ * - QueryClientProvider → global data cache (React Query)
+ * - AuthProvider → admin authentication state
+ * - AdminPathProvider → dynamic admin URL prefix
+ * - LanguageProvider → i18n context (per public route)
+ * - All pages are lazy-loaded for optimal bundle splitting
+ */
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AdminPathProvider, useAdminPath } from "@/hooks/useAdminPath";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Outlet } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
-// Lazy load all pages
+/* ─── Lazy-loaded public pages ─────────────────────────────────────── */
 const Index = lazy(() => import("./pages/Index"));
 const CocktailsPage = lazy(() => import("./pages/CocktailsPage"));
 const ShotsPage = lazy(() => import("./pages/ShotsPage"));
@@ -25,7 +36,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const IngredientPage = lazy(() => import("./pages/IngredientPage"));
 const IngredientsPage = lazy(() => import("./pages/IngredientsPage"));
 
-// Lazy load admin pages
+/* ─── Lazy-loaded admin pages ──────────────────────────────────────── */
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
@@ -40,16 +51,18 @@ const AdminCountryTargets = lazy(() => import("./pages/admin/AdminCountryTargets
 const AdminSeo = lazy(() => import("./pages/admin/AdminSeo"));
 const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
 
+/* ─── React Query configuration ────────────────────────────────────── */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 15 * 60 * 1000,
-      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,   // 5 min — data considered fresh
+      gcTime: 15 * 60 * 1000,     // 15 min — cache garbage collection
+      refetchOnWindowFocus: false, // don't refetch on tab switch
     },
   },
 });
 
+/* ─── Shared loading spinner ───────────────────────────────────────── */
 function PageLoader() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -58,6 +71,7 @@ function PageLoader() {
   );
 }
 
+/* ─── Public layout (header + content + footer) ────────────────────── */
 function PublicLayout() {
   return (
     <LanguageProvider>
@@ -70,6 +84,7 @@ function PublicLayout() {
   );
 }
 
+/* ─── Shared public routes (used for both /:lang and / prefixes) ──── */
 const publicRoutes = (
   <>
     <Route index element={<Index />} />
@@ -84,16 +99,21 @@ const publicRoutes = (
   </>
 );
 
+/* ─── Route tree ───────────────────────────────────────────────────── */
 function AppRoutes() {
   const { adminPath, loading } = useAdminPath();
 
-  if (loading) {
-    return <PageLoader />;
-  }
+  if (loading) return <PageLoader />;
 
   return (
     <Routes>
-      <Route path={`/${adminPath}/login`} element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>} />
+      {/* Admin login (outside protected wrapper) */}
+      <Route
+        path={`/${adminPath}/login`}
+        element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>}
+      />
+
+      {/* Admin panel (protected) */}
       <Route
         path={`/${adminPath}`}
         element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
@@ -112,10 +132,12 @@ function AppRoutes() {
         <Route path="settings" element={<Suspense fallback={<PageLoader />}><AdminSettings /></Suspense>} />
       </Route>
 
+      {/* Public pages — with language prefix */}
       <Route path="/:lang" element={<PublicLayout />}>
         {publicRoutes}
       </Route>
 
+      {/* Public pages — default language (no prefix) */}
       <Route path="/" element={<PublicLayout />}>
         {publicRoutes}
       </Route>
@@ -123,21 +145,24 @@ function AppRoutes() {
   );
 }
 
+/* ─── Root component ───────────────────────────────────────────────── */
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AdminPathProvider>
-            <ScrollToTop />
-            <AppRoutes />
-          </AdminPathProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AdminPathProvider>
+              <ScrollToTop />
+              <AppRoutes />
+            </AdminPathProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
