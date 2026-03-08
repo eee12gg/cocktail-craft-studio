@@ -61,7 +61,42 @@ const KNOWN_LANGUAGES = [
 
 const emptyForm = { code: "", name: "", native_name: "", flag_emoji: "", is_active: true };
 
-export default function AdminLanguages() {
+function LanguageSelect({ existingCodes, value, onSelect }: {
+  existingCodes: string[];
+  value: string;
+  onSelect: (lang: typeof KNOWN_LANGUAGES[number]) => void;
+}) {
+  const available = KNOWN_LANGUAGES.filter(l => !existingCodes.includes(l.code));
+
+  return (
+    <Select
+      value={value}
+      onValueChange={(code) => {
+        const lang = KNOWN_LANGUAGES.find(l => l.code === code);
+        if (lang) onSelect(lang);
+      }}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Выберите язык из списка..." />
+      </SelectTrigger>
+      <SelectContent className="max-h-[300px]">
+        {available.map((lang) => (
+          <SelectItem key={lang.code} value={lang.code}>
+            <span className="flex items-center gap-2">
+              <span>{lang.flag_emoji}</span>
+              <span>{lang.name}</span>
+              <span className="text-muted-foreground">({lang.native_name})</span>
+            </span>
+          </SelectItem>
+        ))}
+        {available.length === 0 && (
+          <div className="px-3 py-2 text-sm text-muted-foreground">Все языки уже добавлены</div>
+        )}
+      </SelectContent>
+    </Select>
+  );
+}
+
   const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
