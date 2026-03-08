@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import ImageUpload from "@/components/admin/ImageUpload";
-import { Plus, Pencil, Trash2, Search, Leaf } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Leaf, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import TranslationTabs from "@/components/admin/TranslationTabs";
 
@@ -223,6 +223,11 @@ export default function AdminIngredients() {
                   </TableCell>
                   <TableCell>{getTypeBadge(ing.type)}</TableCell>
                   <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" asChild>
+                      <a href={`/ingredient/${ing.slug}`} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(ing)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
