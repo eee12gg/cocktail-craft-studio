@@ -1,20 +1,46 @@
-import { Link } from "react-router-dom";
 import { useRecipes, type DBRecipeLight } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
 import RecipeCard from "@/components/RecipeCard";
 import SeoHead from "@/components/SeoHead";
-import { ArrowRight, Wine, Zap, Leaf } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+
+const PAGE_SIZE = 12;
 
 export default function Index() {
   const { data: recipes, isLoading } = useRecipes();
-  const { localePath, t, lang } = useLanguage();
-  const featured = (recipes || []).filter((r) => r.badge).slice(0, 6);
+  const { t, lang } = useLanguage();
 
-  const categories = [
-    { label: t("nav.cocktails", "Cocktails"), path: "/cocktails", icon: Wine, description: t("cat.cocktails_desc", "Classic & modern cocktails") },
-    { label: t("nav.shots", "Shots"), path: "/shots", icon: Zap, description: t("cat.shots_desc", "Quick & bold shooters") },
-    { label: t("nav.non_alcoholic", "Non-Alcoholic"), path: "/non-alcoholic", icon: Leaf, description: t("cat.non_alcoholic_desc", "Refreshing mocktails") },
-  ];
+  /* ── Shuffle once per mount so the feed feels fresh ── */
+  const shuffled = useMemo(() => {
+    if (!recipes?.length) return [];
+    const arr = [...recipes];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [recipes]);
+
+  /* ── Infinite scroll state ── */
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible((v) => Math.min(v + PAGE_SIZE, shuffled.length));
+        }
+      },
+      { rootMargin: "400px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shuffled.length]);
+
+  const hasMore = visible < shuffled.length;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -43,7 +69,7 @@ export default function Index() {
       />
 
       {/* Hero / H1 */}
-      <section className="container mx-auto px-4 pt-24 pb-8 text-center">
+      <section className="container mx-auto px-4 pt-24 pb-10 text-center">
         <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground">
           {t("home.h1", "Discover Perfect Cocktail Recipes")}
         </h1>
@@ -52,46 +78,34 @@ export default function Index() {
         </p>
       </section>
 
-      {/* Categories */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {categories.map((cat, i) => (
-            <Link key={cat.path} to={localePath(cat.path)} className="group flex items-center gap-4 rounded-xl border border-border/50 bg-gradient-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-glow animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                <cat.icon className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="font-display text-lg font-semibold text-foreground">{cat.label}</h2>
-                <p className="font-body text-sm text-muted-foreground">{cat.description}</p>
-              </div>
-              <ArrowRight className="ml-auto h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured */}
+      {/* Infinite drink feed */}
       <section className="container mx-auto px-4 pb-20">
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-3xl font-bold text-foreground">{t("home.featured", "Featured Recipes")}</h2>
-            <p className="mt-1 font-body text-muted-foreground">{t("home.featured_sub", "Our most popular picks")}</p>
-          </div>
-          <Link to={localePath("/cocktails")} className="hidden items-center gap-1 font-body text-sm font-medium text-primary hover:underline sm:flex">
-            {t("home.view_all", "View all")} <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
         {isLoading ? (
           <div className="flex justify-center py-20">
             <p className="font-body text-muted-foreground">{t("common.loading", "Loading recipes...")}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {featured.map((recipe, i) => (
-              <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+            {shuffled.slice(0, visible).map((recipe, i) => (
+              <div key={recipe.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}>
                 <RecipeCard recipe={recipe} />
               </div>
             ))}
+
+            {/* Sentinel for IntersectionObserver */}
+            <div ref={sentinelRef} className="h-1" />
+
+            {hasMore && (
+              <p className="text-center font-body text-sm text-muted-foreground py-4">
+                {t("common.loading", "Loading recipes...")}
+              </p>
+            )}
+
+            {!hasMore && shuffled.length > 0 && (
+              <p className="text-center font-body text-sm text-muted-foreground py-4">
+                {t("common.no_more", "No more recipes")}
+              </p>
+            )}
           </div>
         )}
       </section>
