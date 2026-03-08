@@ -1,6 +1,8 @@
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminPath } from "@/hooks/useAdminPath";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   GlassWater,
@@ -16,6 +18,7 @@ import {
   Video,
   MapPin,
   Search,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +30,19 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["admin-unread-messages"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("contact_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
+      if (error) return 0;
+      return count || 0;
+    },
+    refetchInterval: 30000,
+  });
+
   const base = `/${adminPath}`;
   const navItems = [
     { label: "Дашборд", path: base, icon: LayoutDashboard },
@@ -36,6 +52,7 @@ export default function AdminLayout() {
     { label: "Bar Tools", path: `${base}/tools`, icon: Wrench },
     { label: "Видео", path: `${base}/videos`, icon: Video },
     { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
+    { label: "Сообщения", path: `${base}/messages`, icon: Mail, badge: unreadCount },
     { label: "Языки", path: `${base}/languages`, icon: Globe },
     { label: "Страны", path: `${base}/countries`, icon: MapPin },
     { label: "SEO", path: `${base}/seo`, icon: Search },
