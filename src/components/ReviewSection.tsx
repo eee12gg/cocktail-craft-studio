@@ -96,8 +96,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
             <span className="font-body text-sm text-muted-foreground">{t("review.rating", "Rating:")}</span>
             <StarRating rating={rating} onRate={setRating} interactive />
           </div>
-          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
-            {submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
+          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting || rateLimited} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
+            {rateLimited ? t("review.rate_limited", "Too many reviews") : submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
           </button>
         </div>
       </form>

@@ -172,7 +172,7 @@ export default function ContactDialog({ trigger }: ContactDialogProps) {
               </div>
             </div>
 
-            <Button type="submit" disabled={sending} className="w-full">
+            <Button type="submit" disabled={sending || rateLimited} className="w-full">
               <Send className="mr-2 h-4 w-4" />
               {sending ? t("contact.sending", "Отправка...") : t("contact.send", "Отправить")}
             </Button>
