@@ -30,7 +30,7 @@ export default function DrinkCarousel({ recipe }: DrinkCarouselProps) {
       <div ref={containerRef} className="relative overflow-hidden rounded-xl border border-border/50 bg-gradient-card" style={{ height: containerHeight ? `${containerHeight}px` : "auto" }}>
         <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
           <div ref={slide0Ref} className="w-full flex-shrink-0 p-5">
-            <h3 className="font-display text-xl font-bold text-foreground mb-4">Recipe</h3>
+            <h3 className="font-display text-xl font-bold text-foreground mb-4">{t("recipe.recipe", "Recipe")}</h3>
             <ol className="space-y-3">
               {recipe.instructions.map((step, i) => (
                 <li key={i} className="flex gap-3">
