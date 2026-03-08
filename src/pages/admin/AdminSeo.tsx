@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   Search,
@@ -15,6 +15,9 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 
 interface RecipeSeoData {
@@ -50,11 +53,17 @@ interface SeoIssue {
 const SITE_URL = "https://cocktailcraft.com";
 
 export default function AdminSeo() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [descSearch, setDescSearch] = useState("");
   const [expandedSection, setExpandedSection] = useState<string | null>("issues");
   const [siteTitle, setSiteTitle] = useState("Cocktail Craft");
   const [siteDescription, setSiteDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [savingDesc, setSavingDesc] = useState(false);
+  const [descFilter, setDescFilter] = useState<"all" | "missing" | "short" | "long">("all");
 
   // Fetch languages
   const { data: languages = [] } = useQuery({
@@ -286,6 +295,45 @@ export default function AdminSeo() {
   const scoreColor = seoScore >= 80 ? "text-green-400" : seoScore >= 50 ? "text-yellow-400" : "text-red-400";
   const scoreBg = seoScore >= 80 ? "bg-green-400/10 border-green-400/30" : seoScore >= 50 ? "bg-yellow-400/10 border-yellow-400/30" : "bg-red-400/10 border-red-400/30";
 
+  // Meta description editor logic
+  const handleStartEdit = useCallback((recipe: RecipeSeoData) => {
+    setEditingId(recipe.id);
+    setEditValue(recipe.description || "");
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditValue("");
+  }, []);
+
+  const handleSaveDescription = useCallback(async (recipeId: string) => {
+    setSavingDesc(true);
+    const { error } = await supabase
+      .from("recipes")
+      .update({ description: editValue || null })
+      .eq("id", recipeId);
+    setSavingDesc(false);
+    if (error) {
+      toast.error("Ошибка сохранения");
+      return;
+    }
+    toast.success("Описание обновлено");
+    setEditingId(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-seo-recipes"] });
+  }, [editValue, queryClient]);
+
+  const filteredRecipesForDesc = useMemo(() => {
+    let list = [...recipes];
+    if (descFilter === "missing") list = list.filter((r) => !r.description);
+    else if (descFilter === "short") list = list.filter((r) => r.description && r.description.length < 50);
+    else if (descFilter === "long") list = list.filter((r) => r.description && r.description.length > 160);
+    if (descSearch) {
+      const q = descSearch.toLowerCase();
+      list = list.filter((r) => r.title.toLowerCase().includes(q) || r.slug.includes(q));
+    }
+    return list;
+  }, [recipes, descFilter, descSearch]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -462,7 +510,130 @@ export default function AdminSeo() {
         )}
       </section>
 
-      {/* Technical SEO */}
+      {/* Meta Descriptions Editor */}
+      <section className="rounded-xl border border-border bg-card p-6">
+        <button
+          onClick={() => toggleSection("descriptions")}
+          className="flex w-full items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <Pencil className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-semibold text-foreground">Meta Description рецептов</h2>
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              {recipes.length}
+            </span>
+          </div>
+          {expandedSection === "descriptions" ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+        </button>
+        {expandedSection === "descriptions" && (
+          <div className="mt-4 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск рецептов..."
+                  value={descSearch}
+                  onChange={(e) => setDescSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                {[
+                  { key: "all" as const, label: "Все" },
+                  { key: "missing" as const, label: "Без описания" },
+                  { key: "short" as const, label: "Короткие (<50)" },
+                  { key: "long" as const, label: "Длинные (>160)" },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    onClick={() => setDescFilter(f.key)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                      descFilter === f.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {filteredRecipesForDesc.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Рецептов не найдено</p>
+              ) : (
+                filteredRecipesForDesc.map((recipe) => {
+                  const isEditing = editingId === recipe.id;
+                  const descLen = recipe.description?.length || 0;
+                  const statusColor = !recipe.description
+                    ? "text-red-400"
+                    : descLen < 50
+                    ? "text-yellow-400"
+                    : descLen > 160
+                    ? "text-yellow-400"
+                    : "text-green-400";
+
+                  return (
+                    <div key={recipe.id} className="rounded-lg border border-border p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`h-2 w-2 rounded-full flex-shrink-0 ${statusColor.replace("text-", "bg-")}`} />
+                          <span className="text-sm font-medium text-foreground truncate">{recipe.title}</span>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">/{recipe.slug}</span>
+                        </div>
+                        {!isEditing ? (
+                          <Button variant="ghost" size="sm" onClick={() => handleStartEdit(recipe)} className="flex-shrink-0 h-7 px-2">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : (
+                          <div className="flex gap-1 flex-shrink-0">
+                            <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="h-7 px-2 text-muted-foreground">
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSaveDescription(recipe.id)}
+                              disabled={savingDesc}
+                              className="h-7 px-2 text-green-400 hover:text-green-300"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {isEditing ? (
+                        <div>
+                          <Textarea
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            rows={3}
+                            placeholder="Введите meta description (рекомендовано 100-160 символов)..."
+                            className="text-sm"
+                            autoFocus
+                          />
+                          <p className={`mt-1 text-xs ${editValue.length > 160 ? "text-yellow-400" : editValue.length < 50 && editValue.length > 0 ? "text-yellow-400" : "text-muted-foreground"}`}>
+                            {editValue.length}/160 символов
+                          </p>
+                        </div>
+                      ) : (
+                        <p className={`text-xs ${recipe.description ? "text-muted-foreground" : "text-red-400 italic"}`}>
+                          {recipe.description || "Описание отсутствует"}
+                          {recipe.description && (
+                            <span className={`ml-1 ${statusColor}`}>({descLen})</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="rounded-xl border border-border bg-card p-6">
         <button
           onClick={() => toggleSection("technical")}
