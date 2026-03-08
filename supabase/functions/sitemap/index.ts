@@ -6,13 +6,36 @@ const corsHeaders = {
   "Content-Type": "application/xml; charset=utf-8",
 };
 
-const SITE_URL = "https://cocktailcraft.com"; // TODO: replace with actual domain
 const DEFAULT_LANG = "en";
+
+const LANG_HREFLANG_MAP: Record<string, string> = {
+  en: "en",
+  de: "de",
+  fr: "fr",
+  pl: "pl",
+  uk: "uk",
+  es: "es",
+  it: "it",
+  pt: "pt",
+  ru: "ru",
+  cs: "cs",
+  ja: "ja",
+  ko: "ko",
+  zh: "zh-Hans",
+  ar: "ar",
+  tr: "tr",
+  nl: "nl",
+  sv: "sv",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Derive SITE_URL from request origin or env
+  const origin = req.headers.get("origin") || req.headers.get("referer");
+  const SITE_URL = origin ? new URL(origin).origin : (Deno.env.get("SITE_URL") || "https://cocktailcraft.com");
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -27,10 +50,10 @@ Deno.serve(async (req) => {
 
   const langCodes = (languages || []).map((l: any) => l.code as string);
 
-  // Fetch published recipes
+  // Fetch published recipes with IDs
   const { data: recipes } = await supabase
     .from("recipes")
-    .select("slug, updated_at")
+    .select("id, slug, updated_at")
     .eq("is_published", true);
 
   // Fetch recipe translations
@@ -38,7 +61,6 @@ Deno.serve(async (req) => {
     .from("recipe_translations")
     .select("recipe_id, language_code, slug");
 
-  // Build recipe slug map by language
   const recipeTransMap: Record<string, Record<string, string>> = {};
   (recipeTranslations || []).forEach((t: any) => {
     if (!recipeTransMap[t.recipe_id]) recipeTransMap[t.recipe_id] = {};
@@ -61,40 +83,17 @@ Deno.serve(async (req) => {
   });
 
   // Static pages
-  const staticPages = ["/", "/cocktails", "/shots", "/non-alcoholic", "/search"];
+  const staticPages = ["/", "/cocktails", "/shots", "/non-alcoholic", "/ingredients", "/search"];
 
   let urls = "";
 
-  // Static pages
+  // Static pages with hreflang alternates
   for (const page of staticPages) {
-    urls += buildUrlEntry(page, langCodes, new Date().toISOString());
+    urls += buildUrlEntry(page, langCodes, new Date().toISOString(), SITE_URL);
   }
 
-  // Recipe pages
+  // Recipe pages with translated slugs
   for (const recipe of recipes || []) {
-    const transMap = recipeTransMap[recipe.slug] || {};
-    // For recipes, each language may have its own slug
-    const langSlugs: Record<string, string> = { [DEFAULT_LANG]: recipe.slug };
-    // Actually recipe_translations references recipe_id not slug
-    // We need to match by looking up the recipe id
-    // Let me use a simpler approach - all langs use the same base slug for hreflang
-    urls += buildUrlEntry(`/recipe/${recipe.slug}`, langCodes, recipe.updated_at);
-  }
-
-  // Actually we need recipe IDs to match translations
-  const { data: recipesWithId } = await supabase
-    .from("recipes")
-    .select("id, slug, updated_at")
-    .eq("is_published", true);
-
-  // Rebuild recipe URLs with proper translated slugs
-  urls = "";
-
-  for (const page of staticPages) {
-    urls += buildUrlEntry(page, langCodes, new Date().toISOString());
-  }
-
-  for (const recipe of recipesWithId || []) {
     const transMap = recipeTransMap[recipe.id] || {};
     const langSlugMap: Record<string, string> = {};
     langSlugMap[DEFAULT_LANG] = `/recipe/${recipe.slug}`;
@@ -103,10 +102,10 @@ Deno.serve(async (req) => {
       const tSlug = transMap[code] || recipe.slug;
       langSlugMap[code] = `/recipe/${tSlug}`;
     }
-    urls += buildUrlEntryWithSlugs(langSlugMap, langCodes, recipe.updated_at);
+    urls += buildUrlEntryWithSlugs(langSlugMap, langCodes, recipe.updated_at, SITE_URL);
   }
 
-  // Ingredient pages
+  // Ingredient pages with translated slugs
   for (const ing of ingredients || []) {
     const transMap = ingTransMap[ing.id] || {};
     const langSlugMap: Record<string, string> = {};
@@ -116,7 +115,7 @@ Deno.serve(async (req) => {
       const tSlug = transMap[code] || ing.slug;
       langSlugMap[code] = `/ingredient/${tSlug}`;
     }
-    urls += buildUrlEntryWithSlugs(langSlugMap, langCodes, ing.updated_at);
+    urls += buildUrlEntryWithSlugs(langSlugMap, langCodes, ing.updated_at, SITE_URL);
   }
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -127,32 +126,35 @@ ${urls}</urlset>`;
   return new Response(sitemap, { headers: corsHeaders });
 });
 
-function buildUrl(lang: string, path: string): string {
+function buildUrl(lang: string, path: string, siteUrl: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
-  return lang === DEFAULT_LANG ? `${SITE_URL}${p}` : `${SITE_URL}/${lang}${p}`;
+  return lang === DEFAULT_LANG ? `${siteUrl}${p}` : `${siteUrl}/${lang}${p}`;
 }
 
-function buildUrlEntry(path: string, langCodes: string[], lastmod: string): string {
-  let entry = `  <url>\n    <loc>${buildUrl(DEFAULT_LANG, path)}</loc>\n`;
+function getHreflang(code: string): string {
+  return LANG_HREFLANG_MAP[code] || code;
+}
+
+function buildUrlEntry(path: string, langCodes: string[], lastmod: string, siteUrl: string): string {
+  let entry = `  <url>\n    <loc>${buildUrl(DEFAULT_LANG, path, siteUrl)}</loc>\n`;
   entry += `    <lastmod>${lastmod.split("T")[0]}</lastmod>\n`;
-  // hreflang alternates
   for (const code of langCodes) {
-    entry += `    <xhtml:link rel="alternate" hreflang="${code}" href="${buildUrl(code, path)}" />\n`;
+    entry += `    <xhtml:link rel="alternate" hreflang="${getHreflang(code)}" href="${buildUrl(code, path, siteUrl)}" />\n`;
   }
-  entry += `    <xhtml:link rel="alternate" hreflang="x-default" href="${buildUrl(DEFAULT_LANG, path)}" />\n`;
+  entry += `    <xhtml:link rel="alternate" hreflang="x-default" href="${buildUrl(DEFAULT_LANG, path, siteUrl)}" />\n`;
   entry += `  </url>\n`;
   return entry;
 }
 
-function buildUrlEntryWithSlugs(langSlugMap: Record<string, string>, langCodes: string[], lastmod: string): string {
+function buildUrlEntryWithSlugs(langSlugMap: Record<string, string>, langCodes: string[], lastmod: string, siteUrl: string): string {
   const defaultPath = langSlugMap[DEFAULT_LANG];
-  let entry = `  <url>\n    <loc>${buildUrl(DEFAULT_LANG, defaultPath)}</loc>\n`;
+  let entry = `  <url>\n    <loc>${buildUrl(DEFAULT_LANG, defaultPath, siteUrl)}</loc>\n`;
   entry += `    <lastmod>${lastmod.split("T")[0]}</lastmod>\n`;
   for (const code of langCodes) {
     const path = langSlugMap[code] || defaultPath;
-    entry += `    <xhtml:link rel="alternate" hreflang="${code}" href="${buildUrl(code, path)}" />\n`;
+    entry += `    <xhtml:link rel="alternate" hreflang="${getHreflang(code)}" href="${buildUrl(code, path, siteUrl)}" />\n`;
   }
-  entry += `    <xhtml:link rel="alternate" hreflang="x-default" href="${buildUrl(DEFAULT_LANG, defaultPath)}" />\n`;
+  entry += `    <xhtml:link rel="alternate" hreflang="x-default" href="${buildUrl(DEFAULT_LANG, defaultPath, siteUrl)}" />\n`;
   entry += `  </url>\n`;
   return entry;
 }
