@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const NotFound = () => {
   const location = useLocation();
+  const { t, localePath } = useLanguage();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
@@ -13,12 +15,12 @@ const NotFound = () => {
     <div className="flex min-h-screen items-center justify-center pt-16">
       <div className="text-center">
         <h1 className="font-display text-6xl font-bold text-gradient-gold mb-4">404</h1>
-        <p className="font-body text-xl text-muted-foreground mb-6">Page not found</p>
+        <p className="font-body text-xl text-muted-foreground mb-6">{t("notfound.title", "Page not found")}</p>
         <Link
-          to="/"
+          to={localePath("/")}
           className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-body text-sm font-semibold text-primary-foreground transition-all hover:shadow-glow"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Home
+          <ArrowLeft className="h-4 w-4" /> {t("notfound.back", "Back to Home")}
         </Link>
       </div>
     </div>

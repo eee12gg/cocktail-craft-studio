@@ -88,7 +88,7 @@ export default function IngredientsPage() {
           </div>
         ) : Object.keys(grouped).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="font-display text-xl text-muted-foreground">No ingredients found</p>
+            <p className="font-display text-xl text-muted-foreground">{t("ingredients.no_results", "No ingredients found")}</p>
           </div>
         ) : (
           <div className="space-y-12">

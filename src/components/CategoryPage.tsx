@@ -125,9 +125,9 @@ export default function CategoryPage({ category }: { category: Category }) {
             {/* Infinite scroll sentinel */}
             <div ref={sentinelRef} className="flex justify-center py-8">
               {hasMore ? (
-                <p className="font-body text-sm text-muted-foreground animate-pulse">Loading recipes...</p>
+                <p className="font-body text-sm text-muted-foreground animate-pulse">{t("category.loading_more", "Loading recipes...")}</p>
               ) : filtered.length > PAGE_SIZE ? (
-                <p className="font-body text-sm text-muted-foreground">No more recipes</p>
+                <p className="font-body text-sm text-muted-foreground">{t("category.no_more", "No more recipes")}</p>
               ) : null}
             </div>
           </div>
