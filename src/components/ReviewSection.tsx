@@ -50,7 +50,13 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !text.trim() || rating === 0) return;
+    if (!name.trim() || !text.trim() || rating === 0 || rateLimited) return;
+
+    if (submitCount >= 2) {
+      setRateLimited(true);
+      return;
+    }
+
     setSubmitting(true);
 
     const { data, error } = await supabase.from("reviews").insert({
@@ -60,11 +66,20 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
       text: text.trim().slice(0, 1000),
     }).select().single();
 
-    if (!error && data) {
+    if (error) {
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        setRateLimited(true);
+      }
+      setSubmitting(false);
+      return;
+    }
+
+    if (data) {
       setReviews([data, ...reviews]);
       setName("");
       setText("");
       setRating(0);
+      setSubmitCount((c) => c + 1);
     }
     setSubmitting(false);
   };
