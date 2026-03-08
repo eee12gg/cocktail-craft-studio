@@ -32,6 +32,7 @@ export default function AdminLayout() {
     { label: "Ингредиенты", path: `${base}/ingredients`, icon: Leaf },
     { label: "Типы ингредиентов", path: `${base}/ingredient-types`, icon: Tag },
     { label: "Bar Tools", path: `${base}/tools`, icon: Wrench },
+    { label: "Видео", path: `${base}/videos`, icon: Video },
     { label: "Отзывы", path: `${base}/reviews`, icon: MessageSquare },
     { label: "Языки", path: `${base}/languages`, icon: Globe },
     { label: "Настройки", path: `${base}/settings`, icon: Settings },

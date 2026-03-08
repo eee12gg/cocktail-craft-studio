@@ -81,6 +81,7 @@ function AppRoutes() {
         <Route path="ingredients" element={<AdminIngredients />} />
         <Route path="tools" element={<AdminTools />} />
         <Route path="ingredient-types" element={<AdminIngredientTypes />} />
+        <Route path="videos" element={<AdminVideos />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="languages" element={<AdminLanguages />} />
         <Route path="settings" element={<AdminSettings />} />
