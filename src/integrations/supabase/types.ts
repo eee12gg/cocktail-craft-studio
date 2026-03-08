@@ -617,6 +617,7 @@ export type Database = {
           is_published: boolean
           prep_time: string | null
           slug: string
+          sort_order: number
           title: string
           updated_at: string
           video_url: string | null
@@ -633,6 +634,7 @@ export type Database = {
           is_published?: boolean
           prep_time?: string | null
           slug: string
+          sort_order?: number
           title: string
           updated_at?: string
           video_url?: string | null
@@ -649,6 +651,7 @@ export type Database = {
           is_published?: boolean
           prep_time?: string | null
           slug?: string
+          sort_order?: number
           title?: string
           updated_at?: string
           video_url?: string | null
