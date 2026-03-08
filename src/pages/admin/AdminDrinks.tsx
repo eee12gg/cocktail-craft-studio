@@ -50,6 +50,7 @@ interface RecipeRow {
   badge: string | null;
   is_published: boolean;
   created_at: string;
+  sort_order: number;
 }
 
 interface IngredientOption { id: string; name: string; }
