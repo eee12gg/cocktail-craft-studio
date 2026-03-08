@@ -97,7 +97,8 @@ function LanguageSelect({ existingCodes, value, onSelect }: {
   );
 }
 
-  export default function AdminLanguages() {
+export default function AdminLanguages() {
+  const [languages, setLanguages] = useState<LanguageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<string | null>(null);
