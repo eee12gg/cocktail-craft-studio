@@ -69,24 +69,24 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
 
   return (
     <div className="space-y-6">
-      <h2 className="font-display text-2xl font-bold text-foreground">Reviews</h2>
+      <h2 className="font-display text-2xl font-bold text-foreground">{t("recipe.reviews", "Reviews")}</h2>
 
       <form onSubmit={handleSubmit} className="rounded-xl border border-border/50 bg-gradient-card p-5 space-y-4">
-        <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className="w-full rounded-lg border border-border/50 bg-secondary px-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
-        <textarea placeholder="Write your review..." value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} rows={3} className="w-full rounded-lg border border-border/50 bg-secondary px-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+        <input type="text" placeholder={t("review.your_name", "Your name")} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} className="w-full rounded-lg border border-border/50 bg-secondary px-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+        <textarea placeholder={t("review.write", "Write your review...")} value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} rows={3} className="w-full rounded-lg border border-border/50 bg-secondary px-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-body text-sm text-muted-foreground">Rating:</span>
+            <span className="font-body text-sm text-muted-foreground">{t("review.rating", "Rating:")}</span>
             <StarRating rating={rating} onRate={setRating} interactive />
           </div>
           <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
-            {submitting ? "Sending..." : "Submit"}
+            {submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
           </button>
         </div>
       </form>
 
       {reviews.length === 0 ? (
-        <p className="font-body text-sm text-muted-foreground">No reviews yet. Be the first!</p>
+        <p className="font-body text-sm text-muted-foreground">{t("review.empty", "No reviews yet. Be the first!")}</p>
       ) : (
         <div className="space-y-4">
           {reviews.map((review) => (
