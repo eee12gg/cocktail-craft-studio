@@ -25,7 +25,13 @@ const categoryDescriptions: Record<Category, string> = {
   "non-alcoholic": "Refreshing mocktails for every occasion.",
 };
 
-export default function CategoryPage({ category }: { category: Category }) {
+export default function CategoryPage({
+  category,
+  hashtagFilter,
+}: {
+  category: Category;
+  hashtagFilter?: string;
+}) {
   const isMobile = useIsMobile();
   const initialSize = isMobile ? INITIAL_MOBILE : INITIAL_DESKTOP;
   const loadSize = isMobile ? LOAD_MORE_MOBILE : LOAD_MORE_DESKTOP;
@@ -38,27 +44,36 @@ export default function CategoryPage({ category }: { category: Category }) {
 
   const { data: allRecipes, isLoading } = useRecipesByCategory(category);
 
+  // Apply hashtag pre-filter (e.g. /cocktails/classic)
+  const baseRecipes = useMemo(() => {
+    if (!hashtagFilter) return allRecipes;
+    const tag = hashtagFilter.toLowerCase();
+    return allRecipes.filter((r) =>
+      r.hashtags.some((h) => h.toLowerCase().replace(/^#/, "") === tag),
+    );
+  }, [allRecipes, hashtagFilter]);
+
   const availableTags = useMemo(
-    () => [...new Set(allRecipes.flatMap((r) => r.tags))],
-    [allRecipes]
+    () => [...new Set(baseRecipes.flatMap((r) => r.tags))],
+    [baseRecipes],
   );
 
   const filtered = useMemo(() => {
-    let result = allRecipes;
+    let result = baseRecipes;
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
         (r) =>
           r.title.toLowerCase().includes(q) ||
           r.ingredients.some((i) => i.name.toLowerCase().includes(q)) ||
-          r.hashtags.some((h) => h.toLowerCase().includes(q))
+          r.hashtags.some((h) => h.toLowerCase().includes(q)),
       );
     }
     if (selectedTag) {
       result = result.filter((r) => r.tags.includes(selectedTag));
     }
     return result;
-  }, [search, selectedTag, allRecipes]);
+  }, [search, selectedTag, baseRecipes]);
 
   // Reset visible count when filter changes
   useEffect(() => {

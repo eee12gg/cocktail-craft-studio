@@ -16,9 +16,10 @@ import TranslationTabs from "@/components/admin/TranslationTabs";
 
 const CATEGORIES = [
   { value: "cocktails", label: "Коктейли" },
-  { value: "shots", label: "Шоты" },
   { value: "non-alcoholic", label: "Безалкогольные" },
 ] as const;
+
+// Note: 'shots' category removed from UI; legacy data migrated to 'cocktails'
 
 const BADGES = [
   { value: "__none__", label: "Нет" },
