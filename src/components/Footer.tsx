@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Mail } from "lucide-react";
-import ContactDialog from "@/components/ContactDialog";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -21,23 +20,18 @@ export default function Footer() {
             <Link to={localePath("/cocktails")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
               {t("nav.cocktails", "Cocktails")}
             </Link>
-            <Link to={localePath("/shots")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
-              {t("nav.shots", "Shots")}
-            </Link>
             <Link to={localePath("/non-alcoholic")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
               {t("nav.non_alcoholic", "Non-Alcoholic")}
             </Link>
-            <Link to={localePath("/search")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
-              {t("nav.search", "Search")}
+            <Link to={localePath("/ingredients")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
+              {t("nav.my_bar", "My Bar")}
             </Link>
-            <ContactDialog
-              trigger={
-                <button className="flex items-center gap-1.5 font-body text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <Mail className="h-3.5 w-3.5" />
-                  {t("nav.contact", "Contact")}
-                </button>
-              }
-            />
+            <Link to={localePath("/contacts")} className="font-body text-sm text-muted-foreground hover:text-primary transition-colors">
+              <span className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                {t("nav.contact", "Contact")}
+              </span>
+            </Link>
           </nav>
 
         </div>

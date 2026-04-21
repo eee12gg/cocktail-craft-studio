@@ -121,9 +121,9 @@ export default function AdminBackup() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <div className="flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="text-sm text-foreground/80">
             <strong>Внимание:</strong> Восстановление перезаписывает все данные в базе.
             Сначала рекомендуется создать свежий бекап текущего состояния.
@@ -135,7 +135,7 @@ export default function AdminBackup() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5 text-amber-500" />
+              <Database className="h-5 w-5 text-destructive" />
               Подтвердить восстановление
             </DialogTitle>
           </DialogHeader>

@@ -278,10 +278,6 @@ export default function RecipePage() {
           </div>
         )}
 
-        <div className="mb-12">
-          <ReviewSection recipeId={recipe.id} recipeSlug={recipe.slug} />
-        </div>
-
         {similar.length > 0 && (
           <div className="mb-10">
             <h2 className="font-display text-2xl font-bold text-foreground mb-6">{t("recipe.recommended", "Recommended Drinks")}</h2>
@@ -301,6 +297,10 @@ export default function RecipePage() {
             </div>
           </div>
         )}
+
+        <div className="mb-12">
+          <ReviewSection recipeId={recipe.id} recipeSlug={recipe.slug} />
+        </div>
       </div>
     </div>
   );

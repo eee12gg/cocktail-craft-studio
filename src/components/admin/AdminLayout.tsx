@@ -19,6 +19,7 @@ import {
   MapPin,
   Search,
   Mail,
+  Database,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ export default function AdminLayout() {
     { label: "Языки", path: `${base}/languages`, icon: Globe },
     { label: "Страны", path: `${base}/countries`, icon: MapPin },
     { label: "SEO", path: `${base}/seo`, icon: Search },
+    { label: "Бекапы", path: `${base}/backup`, icon: Database },
     { label: "Настройки", path: `${base}/settings`, icon: Settings },
   ];
 
