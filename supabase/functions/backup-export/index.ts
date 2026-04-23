@@ -1,12 +1,14 @@
 /**
  * Backup export edge function.
- * Collects all data from public tables + storage images and returns
- * a base64-encoded ZIP archive containing data.json and images/ folder.
+ * Returns a JSON backup of all public tables + a list of storage image URLs.
+ *
+ * NOTE: Images are NOT bundled into the archive — they live in the public
+ * 'images' bucket and are referenced by URL. This keeps the export within
+ * Edge Function CPU/memory limits.
  *
  * SECURITY: Only callable by authenticated admin users.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import JSZip from "https://esm.sh/jszip@3.10.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +50,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify caller is admin
     const authHeader = req.headers.get("Authorization") || "";
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
@@ -62,8 +63,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const adminCheck = createClient(supabaseUrl, serviceKey);
-    const { data: roles } = await adminCheck
+    const sb = createClient(supabaseUrl, serviceKey);
+    const { data: roles } = await sb
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
@@ -76,10 +77,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const sb = adminCheck;
     const data: Record<string, any> = {};
-
-    // Collect all tables (paginated, 1000 at a time)
     for (const table of TABLES) {
       const all: any[] = [];
       let from = 0;
@@ -101,65 +99,49 @@ Deno.serve(async (req) => {
       data[table] = all;
     }
 
-    const zip = new JSZip();
-    zip.file("data.json", JSON.stringify(data, null, 2));
-    zip.file(
-      "metadata.json",
-      JSON.stringify(
-        {
-          exported_at: new Date().toISOString(),
-          tables: TABLES,
-          counts: Object.fromEntries(TABLES.map((t) => [t, data[t]?.length || 0])),
-          version: "1",
-        },
-        null,
-        2,
-      ),
-    );
-
-    // Collect all images from 'images' bucket
-    const imagesFolder = zip.folder("images")!;
-    let listFrom = 0;
-    const collectImages = async (prefix = "") => {
-      const { data: items, error } = await sb.storage
-        .from("images")
-        .list(prefix, { limit: 1000, offset: 0 });
-      if (error || !items) return;
-      for (const item of items) {
-        const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
-        if (item.id === null) {
-          // It's a folder
-          await collectImages(fullPath);
-        } else {
-          const { data: blob } = await sb.storage.from("images").download(fullPath);
-          if (blob) {
-            const buf = new Uint8Array(await blob.arrayBuffer());
-            imagesFolder.file(fullPath, buf);
+    // List storage images (paths only — actual files stay in the bucket)
+    const imagePaths: string[] = [];
+    const listImages = async (prefix = "") => {
+      let offset = 0;
+      while (true) {
+        const { data: items, error } = await sb.storage
+          .from("images")
+          .list(prefix, { limit: 1000, offset });
+        if (error || !items || items.length === 0) break;
+        for (const item of items) {
+          const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
+          if (item.id === null) {
+            await listImages(fullPath);
+          } else {
+            imagePaths.push(fullPath);
           }
         }
+        if (items.length < 1000) break;
+        offset += 1000;
       }
     };
-    await collectImages();
+    await listImages();
 
-    const zipBuf = await zip.generateAsync({
-      type: "uint8array",
-      compression: "DEFLATE",
-      compressionOptions: { level: 6 },
+    const payload = {
+      version: "2",
+      exported_at: new Date().toISOString(),
+      tables: TABLES,
+      counts: Object.fromEntries(TABLES.map((t) => [t, data[t]?.length || 0])),
+      image_count: imagePaths.length,
+      image_paths: imagePaths,
+      data,
+    };
+
+    const json = JSON.stringify(payload);
+    const filename = `backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+    return new Response(json, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
     });
-
-    // Convert to base64
-    let binary = "";
-    for (let i = 0; i < zipBuf.length; i++) binary += String.fromCharCode(zipBuf[i]);
-    const base64 = btoa(binary);
-
-    return new Response(
-      JSON.stringify({
-        zip: base64,
-        size: zipBuf.length,
-        counts: Object.fromEntries(TABLES.map((t) => [t, data[t]?.length || 0])),
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("backup-export error:", message);
