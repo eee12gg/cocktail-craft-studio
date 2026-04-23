@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, Search, GlassWater, X, GripVertical, ExternalLink, ArrowUpDown, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import TranslationTabs from "@/components/admin/TranslationTabs";
+import RecipeTranslationTabs from "@/components/admin/RecipeTranslationTabs";
 
 const CATEGORIES = [
   { value: "cocktails", label: "Коктейли" },
@@ -743,7 +743,7 @@ export default function AdminDrinks() {
               </Select>
             </div>
             {editingId && (
-              <TranslationTabs type="recipe" parentId={editingId} />
+              <RecipeTranslationTabs recipeId={editingId} />
             )}
           </div>
 
