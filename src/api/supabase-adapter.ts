@@ -202,6 +202,16 @@ export const supabaseAdapter: ContentAdapter = {
       ingTransMap[t.ingredient_id] = { name: t.name, slug: t.slug };
     });
 
+    const eqTransMap: Record<string, { name: string; description: string | null }> = {};
+    ((eqTransRes.data as any[]) || []).forEach((t: any) => {
+      eqTransMap[t.equipment_id] = { name: t.name, description: t.description };
+    });
+
+    const riTransMap: Record<string, string> = {};
+    ((riTransRes.data as any[]) || []).forEach((t: any) => {
+      riTransMap[t.recipe_ingredient_id] = t.display_text;
+    });
+
     // Translate recommended recipe titles
     const recTransMap: Record<string, { title: string; slug: string }> = {};
     if (needsTranslation && recsRes.data?.length) {
@@ -237,15 +247,19 @@ export const supabaseAdapter: ContentAdapter = {
           slug: it?.slug || asAny(i.ingredient)?.slug || "",
           amount_value: i.amount_value,
           amount_unit: i.amount_unit,
-          display_text: i.display_text,
+          display_text: riTransMap[i.id] || i.display_text,
           image_url: asAny(i.ingredient)?.image_url || null,
         };
       }),
-      equipment: (equipmentRes.data || []).map((e: any) => ({
-        name: asAny(e.equipment)?.name || "",
-        image_url: asAny(e.equipment)?.image_url || null,
-        description: asAny(e.equipment)?.description || null,
-      })),
+      equipment: (equipmentRes.data || []).map((e: any) => {
+        const eqId = asAny(e.equipment)?.id;
+        const et = eqId ? eqTransMap[eqId] : null;
+        return {
+          name: et?.name || asAny(e.equipment)?.name || "",
+          image_url: asAny(e.equipment)?.image_url || null,
+          description: et?.description ?? asAny(e.equipment)?.description ?? null,
+        };
+      }),
       instructions: (stepsRes.data || []).map((s: any) => stepTransMap[s.id] || s.instruction),
       tags: (tagsRes.data || []).filter((t: any) => t).map((t: any) => t.tag),
       hashtags: (hashtagsRes.data || []).map((h: any) => asAny(h.hashtag)?.name || ""),
