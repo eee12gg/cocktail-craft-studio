@@ -90,7 +90,8 @@ export default function AdminBackup() {
             <h2 className="font-display text-lg font-semibold">Создать бекап</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Архивирует все таблицы базы данных и все изображения из storage в один ZIP-файл.
+            Сохраняет все таблицы базы данных в один JSON-файл. Изображения
+            остаются в облачном хранилище и доступны по тем же ссылкам.
           </p>
           <Button onClick={handleExport} disabled={exporting} className="w-full">
             {exporting ? "Создание архива..." : "Скачать бекап"}
@@ -103,12 +104,12 @@ export default function AdminBackup() {
             <h2 className="font-display text-lg font-semibold">Восстановить</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Загрузите ZIP-файл, ранее созданный системой бекапа.
+            Загрузите JSON-файл, ранее созданный системой бекапа.
           </p>
           <label className="block">
             <input
               type="file"
-              accept=".zip,application/zip"
+              accept=".json,application/json"
               className="hidden"
               onChange={handleFilePick}
               disabled={importing}
@@ -120,7 +121,7 @@ export default function AdminBackup() {
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
-              {importing ? "Восстановление..." : "Выбрать ZIP-файл"}
+              {importing ? "Восстановление..." : "Выбрать JSON-файл"}
             </span>
           </label>
         </div>
