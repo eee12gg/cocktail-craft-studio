@@ -156,15 +156,16 @@ export const supabaseAdapter: ContentAdapter = {
       ingredientsRes, stepsRes, equipmentRes,
       tagsRes, hashtagsRes, recsRes,
       recipeTransRes, stepTransRes, ingTransRes,
+      eqTransRes, riTransRes,
     ] = await Promise.all([
       supabase.from("recipe_ingredients")
-        .select("recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
+        .select("id, recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
         .eq("recipe_id", recipeId).order("sort_order"),
       supabase.from("recipe_steps")
         .select("id, instruction, step_number")
         .eq("recipe_id", recipeId).order("step_number"),
       supabase.from("recipe_equipment")
-        .select("equipment:equipment(name, image_url, description)")
+        .select("equipment:equipment(id, name, image_url, description)")
         .eq("recipe_id", recipeId),
       supabase.from("recipe_tags").select("tag").eq("recipe_id", recipeId),
       supabase.from("recipe_hashtags").select("hashtag:hashtags(name)").eq("recipe_id", recipeId),
@@ -179,6 +180,12 @@ export const supabaseAdapter: ContentAdapter = {
         : Promise.resolve({ data: [] as any[] }),
       needsTranslation
         ? supabase.from("ingredient_translations").select("ingredient_id, name, slug").eq("language_code", lang)
+        : Promise.resolve({ data: [] as any[] }),
+      needsTranslation
+        ? supabase.from("equipment_translations").select("equipment_id, name, description").eq("language_code", lang)
+        : Promise.resolve({ data: [] as any[] }),
+      needsTranslation
+        ? supabase.from("recipe_ingredient_translations").select("recipe_ingredient_id, display_text").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
