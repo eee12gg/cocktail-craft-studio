@@ -56,7 +56,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((i) => !i.desktopHidden).map((item) => {
             if (item.key === "roulette") {
               return (
                 <button
