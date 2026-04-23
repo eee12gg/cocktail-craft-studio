@@ -13,25 +13,33 @@ export default function AdminBackup() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("backup-export", {
-        body: {},
-      });
-      if (error) throw error;
-      if (!data) throw new Error("No data returned");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Not authenticated");
 
-      // Edge function returns base64 zip
-      const blob = new Blob(
-        [Uint8Array.from(atob(data.zip), (c) => c.charCodeAt(0))],
-        { type: "application/zip" },
-      );
-      const url = URL.createObjectURL(blob);
+      const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/backup-export`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: "{}",
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = `cocktailcraft-backup-${new Date().toISOString().split("T")[0]}.zip`;
+      a.href = dlUrl;
+      a.download = `cocktailcraft-backup-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(dlUrl);
       toast.success("Backup downloaded successfully");
     } catch (e: any) {
       toast.error("Export failed: " + (e.message || "unknown error"));
@@ -50,14 +58,11 @@ export default function AdminBackup() {
     if (!confirmRestore) return;
     setImporting(true);
     try {
-      const arrayBuffer = await confirmRestore.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
+      const text = await confirmRestore.text();
+      const parsed = JSON.parse(text);
 
       const { data, error } = await supabase.functions.invoke("backup-restore", {
-        body: { zip: base64 },
+        body: parsed,
       });
       if (error) throw error;
       toast.success(`Restored: ${data?.summary || "successful"}`);
