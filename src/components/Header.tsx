@@ -11,19 +11,16 @@ interface NavItem {
   path: string;
   key: string;
   children?: { label: string; path: string; key: string }[];
+  desktopHidden?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  {
-    label: "Cocktails",
-    path: "/cocktails",
-    key: "cocktails",
-    children: [{ label: "Classic", path: "/cocktails/classic", key: "classic" }],
-  },
+  { label: "Cocktails", path: "/cocktails", key: "cocktails" },
   { label: "Non-Alcoholic", path: "/non-alcoholic", key: "non_alcoholic" },
+  { label: "Classic", path: "/cocktails/classic", key: "classic" },
   { label: "My Bar", path: "/ingredients", key: "my_bar" },
   { label: "Roulette", path: "/roulette", key: "roulette" },
-  { label: "Contact", path: "/contacts", key: "contact" },
+  { label: "Contact", path: "/contacts", key: "contact", desktopHidden: true },
 ];
 
 export default function Header() {
@@ -59,7 +56,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((i) => !i.desktopHidden).map((item) => {
             if (item.key === "roulette") {
               return (
                 <button
