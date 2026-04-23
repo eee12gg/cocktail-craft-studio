@@ -156,15 +156,16 @@ export const supabaseAdapter: ContentAdapter = {
       ingredientsRes, stepsRes, equipmentRes,
       tagsRes, hashtagsRes, recsRes,
       recipeTransRes, stepTransRes, ingTransRes,
+      eqTransRes, riTransRes,
     ] = await Promise.all([
       supabase.from("recipe_ingredients")
-        .select("recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
+        .select("id, recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
         .eq("recipe_id", recipeId).order("sort_order"),
       supabase.from("recipe_steps")
         .select("id, instruction, step_number")
         .eq("recipe_id", recipeId).order("step_number"),
       supabase.from("recipe_equipment")
-        .select("equipment:equipment(name, image_url, description)")
+        .select("equipment:equipment(id, name, image_url, description)")
         .eq("recipe_id", recipeId),
       supabase.from("recipe_tags").select("tag").eq("recipe_id", recipeId),
       supabase.from("recipe_hashtags").select("hashtag:hashtags(name)").eq("recipe_id", recipeId),
@@ -180,6 +181,12 @@ export const supabaseAdapter: ContentAdapter = {
       needsTranslation
         ? supabase.from("ingredient_translations").select("ingredient_id, name, slug").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
+      needsTranslation
+        ? supabase.from("equipment_translations").select("equipment_id, name, description").eq("language_code", lang)
+        : Promise.resolve({ data: [] as any[] }),
+      needsTranslation
+        ? supabase.from("recipe_ingredient_translations").select("recipe_ingredient_id, display_text").eq("language_code", lang)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
 
     // Build translation maps
@@ -193,6 +200,16 @@ export const supabaseAdapter: ContentAdapter = {
     const ingTransMap: Record<string, { name: string; slug: string }> = {};
     ((ingTransRes.data as any[]) || []).forEach((t: any) => {
       ingTransMap[t.ingredient_id] = { name: t.name, slug: t.slug };
+    });
+
+    const eqTransMap: Record<string, { name: string; description: string | null }> = {};
+    ((eqTransRes.data as any[]) || []).forEach((t: any) => {
+      eqTransMap[t.equipment_id] = { name: t.name, description: t.description };
+    });
+
+    const riTransMap: Record<string, string> = {};
+    ((riTransRes.data as any[]) || []).forEach((t: any) => {
+      riTransMap[t.recipe_ingredient_id] = t.display_text;
     });
 
     // Translate recommended recipe titles
@@ -230,15 +247,19 @@ export const supabaseAdapter: ContentAdapter = {
           slug: it?.slug || asAny(i.ingredient)?.slug || "",
           amount_value: i.amount_value,
           amount_unit: i.amount_unit,
-          display_text: i.display_text,
+          display_text: riTransMap[i.id] || i.display_text,
           image_url: asAny(i.ingredient)?.image_url || null,
         };
       }),
-      equipment: (equipmentRes.data || []).map((e: any) => ({
-        name: asAny(e.equipment)?.name || "",
-        image_url: asAny(e.equipment)?.image_url || null,
-        description: asAny(e.equipment)?.description || null,
-      })),
+      equipment: (equipmentRes.data || []).map((e: any) => {
+        const eqId = asAny(e.equipment)?.id;
+        const et = eqId ? eqTransMap[eqId] : null;
+        return {
+          name: et?.name || asAny(e.equipment)?.name || "",
+          image_url: asAny(e.equipment)?.image_url || null,
+          description: et?.description ?? asAny(e.equipment)?.description ?? null,
+        };
+      }),
       instructions: (stepsRes.data || []).map((s: any) => stepTransMap[s.id] || s.instruction),
       tags: (tagsRes.data || []).filter((t: any) => t).map((t: any) => t.tag),
       hashtags: (hashtagsRes.data || []).map((h: any) => asAny(h.hashtag)?.name || ""),

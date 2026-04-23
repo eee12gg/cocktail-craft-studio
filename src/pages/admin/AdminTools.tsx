@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, Search, Wrench } from "lucide-react";
 import { toast } from "sonner";
+import EquipmentTranslationTabs from "@/components/admin/EquipmentTranslationTabs";
 
 interface ToolRow {
   id: string;
@@ -189,6 +190,7 @@ export default function AdminTools() {
                 rows={3}
               />
             </div>
+            {editingId && <EquipmentTranslationTabs equipmentId={editingId} />}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Отмена</Button>
