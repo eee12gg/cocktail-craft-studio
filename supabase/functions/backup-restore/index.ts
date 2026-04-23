@@ -81,35 +81,20 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const zipB64 = body?.zip as string;
-    if (!zipB64) {
-      return new Response(JSON.stringify({ error: "Missing zip" }), {
+    // Accept either { data: {...} } JSON v2 backup, or a full v2 payload at root
+    const payload = body?.data ? body : body?.backup ?? body;
+    const data = (payload?.data ?? payload) as Record<string, any[]>;
+    if (!data || typeof data !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid backup payload" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Decode base64 → Uint8Array
-    const binary = atob(zipB64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-    const zip = await JSZip.loadAsync(bytes);
-    const dataFile = zip.file("data.json");
-    if (!dataFile) {
-      return new Response(JSON.stringify({ error: "Invalid backup: data.json missing" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const dataStr = await dataFile.async("string");
-    const data = JSON.parse(dataStr) as Record<string, any[]>;
 
     const log: string[] = [];
 
     // Clear tables in reverse order
     for (const table of DELETE_ORDER) {
-      // Only clear if data has it
       if (!(table in data)) continue;
       const { error } = await sb.from(table).delete().not("id", "is", null);
       if (error && !error.message.includes("violates")) {
@@ -121,8 +106,6 @@ Deno.serve(async (req) => {
     for (const table of RESTORE_ORDER) {
       const rows = data[table];
       if (!rows?.length) continue;
-
-      // Insert in batches of 100
       for (let i = 0; i < rows.length; i += 100) {
         const batch = rows.slice(i, i + 100);
         const { error } = await sb.from(table).upsert(batch, {
@@ -135,29 +118,7 @@ Deno.serve(async (req) => {
       log.push(`${table}: ${rows.length} rows`);
     }
 
-    // Restore images
-    let imageCount = 0;
-    for (const fileName of Object.keys(zip.files)) {
-      if (!fileName.startsWith("images/") || zip.files[fileName].dir) continue;
-      const path = fileName.substring("images/".length);
-      const buf = await zip.files[fileName].async("uint8array");
-      const ext = path.split(".").pop()?.toLowerCase();
-      const contentType =
-        ext === "png"
-          ? "image/png"
-          : ext === "webp"
-          ? "image/webp"
-          : ext === "gif"
-          ? "image/gif"
-          : ext === "svg"
-          ? "image/svg+xml"
-          : "image/jpeg";
-      const { error } = await sb.storage
-        .from("images")
-        .upload(path, buf, { contentType, upsert: true });
-      if (!error) imageCount++;
-    }
-    log.push(`Images: ${imageCount}`);
+    log.push(`Images: skipped (stored in bucket, not in backup)`);
 
     return new Response(
       JSON.stringify({
