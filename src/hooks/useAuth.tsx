@@ -90,17 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  /** Sign in with rate limiting protection */
+  /** Sign in. Rate limiting and leaked-password checks are enforced server-side by Supabase Auth. */
   const signIn = async (email: string, password: string) => {
-    // Check server-side rate limit (5 failed attempts per 15 min)
-    const { data: rateLimited } = await supabase.rpc("is_login_rate_limited", {
-      _email: email,
-    });
-
-    if (rateLimited) {
-      return { error: "Слишком много попыток входа. Попробуйте через 15 минут." };
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
