@@ -23,17 +23,29 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
   const [adminPath, setPath] = useState("admin");
   const [loading, setLoading] = useState(true);
 
-  // Load admin path from database on mount
+  // Load admin path from database on mount (only readable by authenticated users).
+  // Unauthenticated visitors keep the default "admin" path; admins fetch the real one after sign-in.
   useEffect(() => {
-    supabase
-      .from("admin_settings")
-      .select("value")
-      .eq("key", "admin_path")
-      .single()
-      .then(({ data }) => {
+    let cancelled = false;
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("admin_settings")
+        .select("value")
+        .eq("key", "admin_path")
+        .maybeSingle();
+      if (!cancelled) {
         if (data?.value) setPath(data.value);
         setLoading(false);
-      });
+      }
+    };
+    load();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load());
+    return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
   /** Update admin path (requires admin role via RLS) */
