@@ -230,6 +230,8 @@ export default function AdminDrinks() {
         alcohol_level: form.alcohol_level,
         badge: form.badge || null,
         is_published: form.is_published,
+        show_in_roulette: form.show_in_roulette,
+        is_hidden: form.is_hidden,
         image_url: form.image_url,
         image_thumb_url: form.image_thumb_url,
       };
