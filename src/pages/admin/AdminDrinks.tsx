@@ -76,6 +76,8 @@ interface FormData {
   alcohol_level: "None" | "Light" | "Medium" | "Strong";
   badge: "" | "Trending" | "Popular" | "Top 10" | "New";
   is_published: boolean;
+  show_in_roulette: boolean;
+  is_hidden: boolean;
   image_url: string | null;
   image_thumb_url: string | null;
   steps: StepItem[];
@@ -89,6 +91,7 @@ interface FormData {
 const emptyForm: FormData = {
   title: "", slug: "", category: "cocktails", description: "", prep_time: "5 min",
   alcohol_level: "Medium", badge: "", is_published: false,
+  show_in_roulette: true, is_hidden: false,
   image_url: null, image_thumb_url: null,
   steps: [{ instruction: "" }],
   ingredients: [],
