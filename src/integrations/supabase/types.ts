@@ -698,8 +698,10 @@ export type Database = {
           id: string
           image_thumb_url: string | null
           image_url: string | null
+          is_hidden: boolean
           is_published: boolean
           prep_time: string | null
+          show_in_roulette: boolean
           slug: string
           sort_order: number
           title: string
@@ -715,8 +717,10 @@ export type Database = {
           id?: string
           image_thumb_url?: string | null
           image_url?: string | null
+          is_hidden?: boolean
           is_published?: boolean
           prep_time?: string | null
+          show_in_roulette?: boolean
           slug: string
           sort_order?: number
           title: string
@@ -732,8 +736,10 @@ export type Database = {
           id?: string
           image_thumb_url?: string | null
           image_url?: string | null
+          is_hidden?: boolean
           is_published?: boolean
           prep_time?: string | null
+          show_in_roulette?: boolean
           slug?: string
           sort_order?: number
           title?: string
