@@ -52,6 +52,8 @@ interface RecipeRow {
   is_published: boolean;
   created_at: string;
   sort_order: number;
+  show_in_roulette?: boolean;
+  is_hidden?: boolean;
 }
 
 interface IngredientOption { id: string; name: string; }
