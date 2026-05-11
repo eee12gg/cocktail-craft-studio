@@ -466,8 +466,8 @@ export default function AdminDrinks() {
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-sm font-medium text-muted-foreground w-8">{i + 1}</span>
-                {r.image_thumb_url ? (
-                  <img src={r.image_thumb_url} alt={r.title} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                {(r.image_thumb_url || r.image_url) ? (
+                  <img src={r.image_thumb_url || r.image_url || ""} alt={r.title} loading="lazy" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} className="w-8 h-8 rounded object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
                     <GlassWater className="h-3 w-3 text-muted-foreground" />
