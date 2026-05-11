@@ -518,8 +518,8 @@ export default function AdminDrinks() {
                     <TableRow key={r.id}>
                       <TableCell className="text-center text-xs text-muted-foreground">{r.sort_order || "—"}</TableCell>
                       <TableCell>
-                        {r.image_thumb_url ? (
-                          <img src={r.image_thumb_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
+                        {(r.image_thumb_url || r.image_url) ? (
+                          <img src={r.image_thumb_url || r.image_url || ""} alt={r.title} loading="lazy" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} className="w-10 h-10 rounded object-cover" />
                         ) : (
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
                             <GlassWater className="h-4 w-4 text-muted-foreground" />
