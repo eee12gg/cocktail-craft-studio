@@ -339,30 +339,6 @@ export type Database = {
         }
         Relationships: []
       }
-      login_attempts: {
-        Row: {
-          attempted_at: string
-          email: string
-          id: string
-          ip_address: string | null
-          success: boolean
-        }
-        Insert: {
-          attempted_at?: string
-          email: string
-          id?: string
-          ip_address?: string | null
-          success?: boolean
-        }
-        Update: {
-          attempted_at?: string
-          email?: string
-          id?: string
-          ip_address?: string | null
-          success?: boolean
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -867,7 +843,6 @@ export type Database = {
         Returns: boolean
       }
       is_contact_rate_limited: { Args: { _email: string }; Returns: boolean }
-      is_login_rate_limited: { Args: { _email: string }; Returns: boolean }
       is_review_rate_limited: {
         Args: { _author_name: string; _recipe_id: string }
         Returns: boolean
