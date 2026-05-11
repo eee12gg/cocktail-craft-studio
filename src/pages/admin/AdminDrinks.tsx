@@ -617,9 +617,20 @@ export default function AdminDrinks() {
               <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
-              <Label>Опубликован</Label>
+            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+              <Label className="text-sm font-semibold">Настройки отображения</Label>
+              <div className="flex items-center gap-2">
+                <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
+                <Label className="cursor-pointer">Опубликован (виден на сайте)</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={form.show_in_roulette} onCheckedChange={(v) => setForm((f) => ({ ...f, show_in_roulette: v }))} />
+                <Label className="cursor-pointer">Участвует в рулетке</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={form.is_hidden} onCheckedChange={(v) => setForm((f) => ({ ...f, is_hidden: v }))} />
+                <Label className="cursor-pointer">Скрыт (исключён из всех списков)</Label>
+              </div>
             </div>
 
             {/* Ingredients */}
