@@ -345,7 +345,16 @@ export default function AdminReviews() {
               </label>
               <div className="grid grid-cols-[1fr_120px_80px_2fr_80px_90px_100px] gap-3 flex-1 items-center min-w-0">
                 <span className="text-sm font-medium text-foreground truncate">{r.recipes?.title || "—"}</span>
-                <span className="text-sm text-muted-foreground truncate">{r.author_name}</span>
+                <div className="min-w-0">
+                  <div className="text-sm text-muted-foreground truncate">{r.author_name}</div>
+                  {(r.country_code || r.city || r.language_code) && (
+                    <div className="text-xs text-muted-foreground/70 truncate flex items-center gap-1">
+                      {r.country_code && <span>{flagEmoji(r.country_code)}</span>}
+                      {r.city && <span>{r.city}</span>}
+                      {r.language_code && <span className="uppercase">· {r.language_code}</span>}
+                    </div>
+                  )}
+                </div>
                 <div>{renderStars(r.rating)}</div>
                 <p className="text-sm text-muted-foreground truncate">{r.text}</p>
                 <Badge variant={r.is_visible ? "default" : "secondary"} className="w-fit text-xs">
