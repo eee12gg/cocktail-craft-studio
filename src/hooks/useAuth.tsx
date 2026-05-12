@@ -70,24 +70,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        if (!hasSessionFlag) {
-          // Browser was closed/reopened — force logout
-          supabase.auth.signOut();
-          setIsAdmin(false);
-          setLoading(false);
-          return;
+        if (session?.user) {
+          if (!hasSessionFlag) {
+            // Browser was closed/reopened — force logout
+            supabase.auth.signOut();
+            setIsAdmin(false);
+            setLoading(false);
+            return;
+          }
+          checkAdminRole(session.user.id);
         }
-        checkAdminRole(session.user.id);
-      }
-      setLoading(false);
-    });
+        setLoading(false);
+      })
+      .catch((e) => {
+        console.error("[useAuth] getSession failed", e);
+        setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    // Safety net: never keep app blocked > 3s on auth init
+    const timeout = setTimeout(() => setLoading(false), 3000);
+
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   /** Sign in. Rate limiting and leaked-password checks are enforced server-side by Supabase Auth. */
