@@ -751,27 +751,42 @@ export type Database = {
       reviews: {
         Row: {
           author_name: string
+          city: string | null
+          country: string | null
+          country_code: string | null
           created_at: string
           id: string
+          ip: string | null
           is_visible: boolean
+          language_code: string | null
           rating: number
           recipe_id: string
           text: string
         }
         Insert: {
           author_name: string
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string
           id?: string
+          ip?: string | null
           is_visible?: boolean
+          language_code?: string | null
           rating: number
           recipe_id: string
           text: string
         }
         Update: {
           author_name?: string
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
           created_at?: string
           id?: string
+          ip?: string | null
           is_visible?: boolean
+          language_code?: string | null
           rating?: number
           recipe_id?: string
           text?: string
