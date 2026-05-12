@@ -28,24 +28,33 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+        const { data } = await supabase
+          .from("admin_settings")
+          .select("value")
+          .eq("key", "admin_path")
+          .maybeSingle();
+        if (!cancelled) {
+          if (data?.value) setPath(data.value);
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error("[useAdminPath] load failed", e);
         if (!cancelled) setLoading(false);
-        return;
-      }
-      const { data } = await supabase
-        .from("admin_settings")
-        .select("value")
-        .eq("key", "admin_path")
-        .maybeSingle();
-      if (!cancelled) {
-        if (data?.value) setPath(data.value);
-        setLoading(false);
       }
     };
     load();
+    // Safety: never block the app on this provider for more than 3s
+    const timeout = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 3000);
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load());
-    return () => { cancelled = true; subscription.unsubscribe(); };
+    return () => { cancelled = true; clearTimeout(timeout); subscription.unsubscribe(); };
   }, []);
 
   /** Update admin path (requires admin role via RLS) */
