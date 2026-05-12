@@ -20,7 +20,18 @@ interface ReviewRow {
   text: string;
   is_visible: boolean;
   created_at: string;
+  ip: string | null;
+  country: string | null;
+  country_code: string | null;
+  city: string | null;
+  language_code: string | null;
   recipes: { title: string; slug: string } | null;
+}
+
+function flagEmoji(code: string | null): string {
+  if (!code || code.length !== 2) return "";
+  const A = 0x1f1e6;
+  return String.fromCodePoint(...code.toUpperCase().split("").map((c) => A + c.charCodeAt(0) - 65));
 }
 
 type SortKey = "date" | "rating" | "author" | "recipe";
