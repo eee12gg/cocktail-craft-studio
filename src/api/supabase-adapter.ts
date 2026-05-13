@@ -34,12 +34,16 @@ export const supabaseAdapter: ContentAdapter = {
    *  RECIPES — lightweight list for category/home pages
    * ═══════════════════════════════════════════════════════════════════ */
   async fetchRecipes(lang: LangCode): Promise<RecipeLight[]> {
-    const { data: recipes, error } = await supabase
+    console.log("[adapter] before from(recipes)");
+    const queryPromise = supabase
       .from("recipes")
       .select("id, slug, title, category, image_url, description, prep_time, alcohol_level, badge, is_published")
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
+    console.log("[adapter] built builder, awaiting...");
+    const { data: recipes, error } = await queryPromise;
+    console.log("[adapter] response:", { error, count: recipes?.length });
 
     if (error) throw error;
     if (!recipes?.length) return [];
