@@ -22,7 +22,17 @@ export function useRecipes() {
   const { lang } = useLanguage();
   return useQuery({
     queryKey: ["recipes-light", lang],
-    queryFn: () => api.fetchRecipes(lang),
+    queryFn: async () => {
+      console.log("[useRecipes] fetching for lang=", lang);
+      try {
+        const r = await api.fetchRecipes(lang);
+        console.log("[useRecipes] got", r.length, "recipes");
+        return r;
+      } catch (e) {
+        console.error("[useRecipes] error", e);
+        throw e;
+      }
+    },
     staleTime: 5 * 60 * 1000,
   });
 }
