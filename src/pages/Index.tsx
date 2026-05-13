@@ -7,8 +7,9 @@ import { useEffect, useRef, useState, useMemo } from "react";
 const PAGE_SIZE = 12;
 
 export default function Index() {
-  const { data: recipes, isLoading } = useRecipes();
+  const { data: recipes, isLoading, error, fetchStatus, status } = useRecipes();
   const { t, lang } = useLanguage();
+  console.log("[Index] recipes status=", status, "fetchStatus=", fetchStatus, "isLoading=", isLoading, "error=", error, "count=", recipes?.length);
 
   /* ── Shuffle once per mount so the feed feels fresh ── */
   const shuffled = useMemo(() => {
