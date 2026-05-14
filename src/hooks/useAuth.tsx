@@ -13,6 +13,8 @@ import type { User, Session } from "@supabase/supabase-js";
 
 /** SessionStorage flag — cleared when browser is closed */
 const SESSION_FLAG = "admin_session_active";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 /* ─── Types ────────────────────────────────────────────────────────── */
 interface AuthContextType {
@@ -34,7 +36,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   /** Check if user has admin role via secure DB function */
-  const checkAdminRole = async (userId: string): Promise<boolean> => {
+  const checkAdminRole = async (userId: string, accessToken?: string): Promise<boolean> => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 6000);
+
+    try {
+      const token = accessToken ?? session?.access_token;
+      if (!token) {
+        setIsAdmin(false);
+        return false;
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/has_role`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _user_id: userId,
+          _role: "admin",
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        setIsAdmin(false);
+        return false;
+      }
+
+      const data = await response.json();
+      const allowed = data === true;
+      setIsAdmin(allowed);
+      return allowed;
+    } catch (e) {
+      console.error("[useAuth] admin role check failed", e);
+      setIsAdmin(false);
+      return false;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
+
+  const checkAdminRoleWithClientFallback = async (userId: string, accessToken?: string): Promise<boolean> => {
+    const directResult = await checkAdminRole(userId, accessToken);
+    if (directResult) return true;
+
     try {
       const { data, error } = await supabase.rpc("has_role", {
         _user_id: userId,
@@ -69,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setTimeout(() => {
         if (cancelled) return;
-        void checkAdminRole(session.user.id).finally(() => {
+        void checkAdminRoleWithClientFallback(session.user.id, session.access_token).finally(() => {
           if (!cancelled) setLoading(false);
         });
       }, 0);
@@ -121,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(data.session);
     setUser(data.user);
 
-    const allowed = await checkAdminRole(data.user.id);
+    const allowed = await checkAdminRoleWithClientFallback(data.user.id, data.session.access_token);
     setLoading(false);
 
     if (!allowed) {
