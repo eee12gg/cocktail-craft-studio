@@ -79,25 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const checkAdminRoleWithClientFallback = async (userId: string, accessToken?: string): Promise<boolean> => {
-    const directResult = await checkAdminRole(userId, accessToken);
-    if (directResult) return true;
-
-    try {
-      const { data, error } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "admin",
-      });
-      const allowed = !error && !!data;
-      setIsAdmin(allowed);
-      return allowed;
-    } catch (e) {
-      console.error("[useAuth] admin role check failed", e);
-      setIsAdmin(false);
-      return false;
-    }
-  };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -117,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setTimeout(() => {
         if (cancelled) return;
-        void checkAdminRoleWithClientFallback(session.user.id, session.access_token).finally(() => {
+        void checkAdminRole(session.user.id, session.access_token).finally(() => {
           if (!cancelled) setLoading(false);
         });
       }, 0);
@@ -169,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(data.session);
     setUser(data.user);
 
-    const allowed = await checkAdminRoleWithClientFallback(data.user.id, data.session.access_token);
+    const allowed = await checkAdminRole(data.user.id, data.session.access_token);
     setLoading(false);
 
     if (!allowed) {
