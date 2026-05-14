@@ -43,22 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const hasSessionFlag = sessionStorage.getItem(SESSION_FLAG);
-
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Auto-logout: browser was closed and reopened (sessionStorage cleared)
-          if (!sessionStorage.getItem(SESSION_FLAG) && _event === "INITIAL_SESSION") {
-            await supabase.auth.signOut();
-            setIsAdmin(false);
-            setLoading(false);
-            return;
-          }
           sessionStorage.setItem(SESSION_FLAG, "1");
           setTimeout(() => checkAdminRole(session.user.id), 0);
         } else {
@@ -74,15 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
-
         if (session?.user) {
-          if (!hasSessionFlag) {
-            // Browser was closed/reopened — force logout
-            supabase.auth.signOut();
-            setIsAdmin(false);
-            setLoading(false);
-            return;
-          }
           checkAdminRole(session.user.id);
         }
         setLoading(false);
