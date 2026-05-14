@@ -10,7 +10,7 @@
  * - Parallel query execution for performance
  */
 
-import { supabasePublic as supabase } from "@/integrations/supabase/public-client";
+import { supabase } from "@/integrations/supabase/client";
 import type { ContentAdapter } from "./adapter";
 import type {
   RecipeLight,

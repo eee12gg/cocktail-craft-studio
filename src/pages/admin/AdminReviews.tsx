@@ -20,18 +20,7 @@ interface ReviewRow {
   text: string;
   is_visible: boolean;
   created_at: string;
-  ip: string | null;
-  country: string | null;
-  country_code: string | null;
-  city: string | null;
-  language_code: string | null;
   recipes: { title: string; slug: string } | null;
-}
-
-function flagEmoji(code: string | null): string {
-  if (!code || code.length !== 2) return "";
-  const A = 0x1f1e6;
-  return String.fromCodePoint(...code.toUpperCase().split("").map((c) => A + c.charCodeAt(0) - 65));
 }
 
 type SortKey = "date" | "rating" | "author" | "recipe";
@@ -345,16 +334,7 @@ export default function AdminReviews() {
               </label>
               <div className="grid grid-cols-[1fr_120px_80px_2fr_80px_90px_100px] gap-3 flex-1 items-center min-w-0">
                 <span className="text-sm font-medium text-foreground truncate">{r.recipes?.title || "—"}</span>
-                <div className="min-w-0">
-                  <div className="text-sm text-muted-foreground truncate">{r.author_name}</div>
-                  {(r.country_code || r.city || r.language_code) && (
-                    <div className="text-xs text-muted-foreground/70 truncate flex items-center gap-1">
-                      {r.country_code && <span>{flagEmoji(r.country_code)}</span>}
-                      {r.city && <span>{r.city}</span>}
-                      {r.language_code && <span className="uppercase">· {r.language_code}</span>}
-                    </div>
-                  )}
-                </div>
+                <span className="text-sm text-muted-foreground truncate">{r.author_name}</span>
                 <div>{renderStars(r.rating)}</div>
                 <p className="text-sm text-muted-foreground truncate">{r.text}</p>
                 <Badge variant={r.is_visible ? "default" : "secondary"} className="w-fit text-xs">

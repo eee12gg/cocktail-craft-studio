@@ -32,9 +32,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
   const [text, setText] = useState("");
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
-
-  const reviewedKey = `reviewed:${recipeId}`;
+  const [submitCount, setSubmitCount] = useState(0);
+  const [rateLimited, setRateLimited] = useState(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -47,45 +46,40 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
       if (data) setReviews(data);
     };
     fetchReviews();
-    if (typeof window !== "undefined" && localStorage.getItem(reviewedKey)) {
-      setAlreadyReviewed(true);
-    }
-  }, [recipeId, reviewedKey]);
+  }, [recipeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !text.trim() || rating === 0 || alreadyReviewed) return;
+    if (!name.trim() || !text.trim() || rating === 0 || rateLimited) return;
+
+    if (submitCount >= 2) {
+      setRateLimited(true);
+      return;
+    }
 
     setSubmitting(true);
 
-    const { data, error } = await supabase.functions.invoke("submit-review", {
-      body: {
-        recipe_id: recipeId,
-        author_name: name.trim().slice(0, 100),
-        text: text.trim().slice(0, 1000),
-        rating,
-        language_code: lang,
-      },
-    });
+    const { data, error } = await supabase.from("reviews").insert({
+      recipe_id: recipeId,
+      author_name: name.trim().slice(0, 100),
+      rating,
+      text: text.trim().slice(0, 1000),
+    }).select().single();
 
-    if (error || (data as any)?.error) {
-      const code = (data as any)?.error;
-      if (code === "already_reviewed") {
-        setAlreadyReviewed(true);
-        localStorage.setItem(reviewedKey, "1");
+    if (error) {
+      if (error.code === "42501" || error.message?.includes("policy")) {
+        setRateLimited(true);
       }
       setSubmitting(false);
       return;
     }
 
-    const review = (data as any)?.review;
-    if (review) {
-      setReviews([review, ...reviews]);
+    if (data) {
+      setReviews([data, ...reviews]);
       setName("");
       setText("");
       setRating(0);
-      localStorage.setItem(reviewedKey, "1");
-      setAlreadyReviewed(true);
+      setSubmitCount((c) => c + 1);
     }
     setSubmitting(false);
   };
@@ -102,8 +96,8 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
             <span className="font-body text-sm text-muted-foreground">{t("review.rating", "Rating:")}</span>
             <StarRating rating={rating} onRate={setRating} interactive />
           </div>
-          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting || alreadyReviewed} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
-            {alreadyReviewed ? t("review.already", "You already reviewed") : submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
+          <button type="submit" disabled={!name.trim() || !text.trim() || rating === 0 || submitting || rateLimited} className="rounded-lg bg-primary px-5 py-2 font-body text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed">
+            {rateLimited ? t("review.rate_limited", "Too many reviews") : submitting ? t("review.sending", "Sending...") : t("review.submit", "Submit")}
           </button>
         </div>
       </form>

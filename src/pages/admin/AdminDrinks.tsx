@@ -52,8 +52,6 @@ interface RecipeRow {
   is_published: boolean;
   created_at: string;
   sort_order: number;
-  show_in_roulette?: boolean;
-  is_hidden?: boolean;
 }
 
 interface IngredientOption { id: string; name: string; }
@@ -76,8 +74,6 @@ interface FormData {
   alcohol_level: "None" | "Light" | "Medium" | "Strong";
   badge: "" | "Trending" | "Popular" | "Top 10" | "New";
   is_published: boolean;
-  show_in_roulette: boolean;
-  is_hidden: boolean;
   image_url: string | null;
   image_thumb_url: string | null;
   steps: StepItem[];
@@ -91,7 +87,6 @@ interface FormData {
 const emptyForm: FormData = {
   title: "", slug: "", category: "cocktails", description: "", prep_time: "5 min",
   alcohol_level: "Medium", badge: "", is_published: false,
-  show_in_roulette: true, is_hidden: false,
   image_url: null, image_thumb_url: null,
   steps: [{ instruction: "" }],
   ingredients: [],
@@ -160,59 +155,41 @@ export default function AdminDrinks() {
   };
 
   const openEdit = async (recipe: RecipeRow) => {
-    try {
-      setEditingId(recipe.id);
-      // Load related data
-      const [stepsRes, ingRes, eqRes, tagsRes, htRes, recRes] = await Promise.all([
-        supabase.from("recipe_steps").select("*").eq("recipe_id", recipe.id).order("step_number"),
-        supabase.from("recipe_ingredients").select("*").eq("recipe_id", recipe.id).order("sort_order"),
-        supabase.from("recipe_equipment").select("equipment_id").eq("recipe_id", recipe.id),
-        supabase.from("recipe_tags").select("tag").eq("recipe_id", recipe.id),
-        supabase.from("recipe_hashtags").select("hashtag_id, hashtags(name)").eq("recipe_id", recipe.id),
-        supabase.from("recipe_recommendations").select("recommended_recipe_id").eq("recipe_id", recipe.id).order("sort_order"),
-      ]);
+    setEditingId(recipe.id);
+    // Load related data
+    const [stepsRes, ingRes, eqRes, tagsRes, htRes, recRes] = await Promise.all([
+      supabase.from("recipe_steps").select("*").eq("recipe_id", recipe.id).order("step_number"),
+      supabase.from("recipe_ingredients").select("*").eq("recipe_id", recipe.id).order("sort_order"),
+      supabase.from("recipe_equipment").select("equipment_id").eq("recipe_id", recipe.id),
+      supabase.from("recipe_tags").select("tag").eq("recipe_id", recipe.id),
+      supabase.from("recipe_hashtags").select("hashtag_id, hashtags(name)").eq("recipe_id", recipe.id),
+      supabase.from("recipe_recommendations").select("recommended_recipe_id").eq("recipe_id", recipe.id).order("sort_order"),
+    ]);
 
-      const errors = [stepsRes, ingRes, eqRes, tagsRes, htRes, recRes].filter((r) => r.error);
-      if (errors.length) {
-        console.error("[AdminDrinks] openEdit errors for recipe", recipe.slug, recipe.id, errors.map((e) => e.error));
-      }
-
-      const safeCategory: Category =
-        recipe.category === "cocktails" || recipe.category === "non-alcoholic"
-          ? recipe.category
-          : "cocktails";
-
-      setForm({
-        title: recipe.title,
-        slug: recipe.slug,
-        category: safeCategory,
-        description: recipe.description || "",
-        prep_time: recipe.prep_time || "",
-        alcohol_level: (recipe.alcohol_level as FormData["alcohol_level"]) || "Medium",
-        badge: (recipe.badge || "") as FormData["badge"],
-        is_published: recipe.is_published,
-        show_in_roulette: recipe.show_in_roulette ?? true,
-        is_hidden: recipe.is_hidden ?? false,
-        image_url: recipe.image_url,
-        image_thumb_url: recipe.image_thumb_url,
-        steps: stepsRes.data?.map((s: any) => ({ instruction: s.instruction })) || [{ instruction: "" }],
-        ingredients: ingRes.data?.map((i: any) => ({
-          ingredient_id: i.ingredient_id,
-          amount_value: i.amount_value?.toString() || "",
-          amount_unit: i.amount_unit || "",
-          display_text: i.display_text,
-        })) || [],
-        equipment: eqRes.data?.map((e: any) => ({ equipment_id: e.equipment_id })) || [],
-        tags: tagsRes.data?.map((t: any) => ({ tag: t.tag })) || [],
-        hashtags: htRes.data?.map((h: any) => ({ hashtag_id: h.hashtag_id, name: (h as any).hashtags?.name || "" })) || [],
-        recommendations: recRes.data?.map((r: any) => ({ recommended_recipe_id: r.recommended_recipe_id })) || [],
-      });
-      setDialogOpen(true);
-    } catch (err: any) {
-      console.error("[AdminDrinks] Failed to open recipe", recipe.slug, recipe.id, err);
-      toast.error(`Не удалось открыть «${recipe.title}»: ${err?.message || "неизвестная ошибка"}`);
-      setEditingId(null);
-    }
+    setForm({
+      title: recipe.title,
+      slug: recipe.slug,
+      category: recipe.category,
+      description: recipe.description || "",
+      prep_time: recipe.prep_time || "",
+      alcohol_level: recipe.alcohol_level as FormData["alcohol_level"],
+      badge: (recipe.badge || "") as FormData["badge"],
+      is_published: recipe.is_published,
+      image_url: recipe.image_url,
+      image_thumb_url: recipe.image_thumb_url,
+      steps: stepsRes.data?.map((s: any) => ({ instruction: s.instruction })) || [{ instruction: "" }],
+      ingredients: ingRes.data?.map((i: any) => ({
+        ingredient_id: i.ingredient_id,
+        amount_value: i.amount_value?.toString() || "",
+        amount_unit: i.amount_unit || "",
+        display_text: i.display_text,
+      })) || [],
+      equipment: eqRes.data?.map((e: any) => ({ equipment_id: e.equipment_id })) || [],
+      tags: tagsRes.data?.map((t: any) => ({ tag: t.tag })) || [],
+      hashtags: htRes.data?.map((h: any) => ({ hashtag_id: h.hashtag_id, name: (h as any).hashtags?.name || "" })) || [],
+      recommendations: recRes.data?.map((r: any) => ({ recommended_recipe_id: r.recommended_recipe_id })) || [],
+    });
+    setDialogOpen(true);
   };
 
   const handleSave = async () => {
@@ -230,8 +207,6 @@ export default function AdminDrinks() {
         alcohol_level: form.alcohol_level,
         badge: form.badge || null,
         is_published: form.is_published,
-        show_in_roulette: form.show_in_roulette,
-        is_hidden: form.is_hidden,
         image_url: form.image_url,
         image_thumb_url: form.image_thumb_url,
       };
@@ -466,8 +441,8 @@ export default function AdminDrinks() {
               >
                 <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <span className="text-sm font-medium text-muted-foreground w-8">{i + 1}</span>
-                {(r.image_thumb_url || r.image_url) ? (
-                  <img src={r.image_thumb_url || r.image_url || ""} alt={r.title} loading="lazy" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                {r.image_thumb_url ? (
+                  <img src={r.image_thumb_url} alt={r.title} className="w-8 h-8 rounded object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
                     <GlassWater className="h-3 w-3 text-muted-foreground" />
@@ -518,8 +493,8 @@ export default function AdminDrinks() {
                     <TableRow key={r.id}>
                       <TableCell className="text-center text-xs text-muted-foreground">{r.sort_order || "—"}</TableCell>
                       <TableCell>
-                        {(r.image_thumb_url || r.image_url) ? (
-                          <img src={r.image_thumb_url || r.image_url || ""} alt={r.title} loading="lazy" onError={(e) => ((e.target as HTMLImageElement).style.display = "none")} className="w-10 h-10 rounded object-cover" />
+                        {r.image_thumb_url ? (
+                          <img src={r.image_thumb_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
                         ) : (
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
                             <GlassWater className="h-4 w-4 text-muted-foreground" />
@@ -617,20 +592,9 @@ export default function AdminDrinks() {
               <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
             </div>
 
-            <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
-              <Label className="text-sm font-semibold">Настройки отображения</Label>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
-                <Label className="cursor-pointer">Опубликован (виден на сайте)</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.show_in_roulette} onCheckedChange={(v) => setForm((f) => ({ ...f, show_in_roulette: v }))} />
-                <Label className="cursor-pointer">Участвует в рулетке</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_hidden} onCheckedChange={(v) => setForm((f) => ({ ...f, is_hidden: v }))} />
-                <Label className="cursor-pointer">Скрыт (исключён из всех списков)</Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
+              <Label>Опубликован</Label>
             </div>
 
             {/* Ingredients */}
