@@ -13,6 +13,8 @@ import type { User, Session } from "@supabase/supabase-js";
 
 /** SessionStorage flag — cleared when browser is closed */
 const SESSION_FLAG = "admin_session_active";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 /* ─── Types ────────────────────────────────────────────────────────── */
 interface AuthContextType {
@@ -34,51 +36,96 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   /** Check if user has admin role via secure DB function */
-  const checkAdminRole = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-    setIsAdmin(!!data);
+  const checkAdminRole = async (userId: string, accessToken?: string): Promise<boolean> => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 6000);
+
+    try {
+      const token = accessToken ?? session?.access_token;
+      if (!token) {
+        setIsAdmin(false);
+        return false;
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/has_role`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          _user_id: userId,
+          _role: "admin",
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        setIsAdmin(false);
+        return false;
+      }
+
+      const data = await response.json();
+      const allowed = data === true;
+      setIsAdmin(allowed);
+      return allowed;
+    } catch (e) {
+      console.error("[useAuth] admin role check failed", e);
+      setIsAdmin(false);
+      return false;
+    } finally {
+      window.clearTimeout(timeout);
+    }
   };
 
   useEffect(() => {
+    let cancelled = false;
+
+    const applySession = (session: Session | null) => {
+      if (cancelled) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (!session?.user) {
+        setIsAdmin(false);
+        sessionStorage.removeItem(SESSION_FLAG);
+        setLoading(false);
+        return;
+      }
+
+      sessionStorage.setItem(SESSION_FLAG, "1");
+      setLoading(true);
+      setTimeout(() => {
+        if (cancelled) return;
+        void checkAdminRole(session.user.id, session.access_token).finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+      }, 0);
+    };
+
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          sessionStorage.setItem(SESSION_FLAG, "1");
-          setTimeout(() => checkAdminRole(session.user.id), 0);
-        } else {
-          setIsAdmin(false);
-          sessionStorage.removeItem(SESSION_FLAG);
-        }
-        setLoading(false);
+        applySession(session);
       }
     );
 
     // Check for existing session on mount
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          checkAdminRole(session.user.id);
-        }
-        setLoading(false);
+        applySession(session);
       })
       .catch((e) => {
         console.error("[useAuth] getSession failed", e);
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
 
     // Safety net: never keep app blocked > 3s on auth init
     const timeout = setTimeout(() => setLoading(false), 3000);
 
     return () => {
+      cancelled = true;
       clearTimeout(timeout);
       subscription.unsubscribe();
     };
@@ -86,13 +133,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Sign in. Rate limiting and leaked-password checks are enforced server-side by Supabase Auth. */
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      setLoading(false);
       return { error: "Неверный email или пароль" };
     }
 
+    if (!data.session || !data.user) {
+      setLoading(false);
+      return { error: "Не удалось создать сессию. Попробуйте ещё раз" };
+    }
+
     sessionStorage.setItem(SESSION_FLAG, "1");
+    setSession(data.session);
+    setUser(data.user);
+
+    const allowed = await checkAdminRole(data.user.id, data.session.access_token);
+    setLoading(false);
+
+    if (!allowed) {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      return { error: "У этой учётной записи нет прав администратора" };
+    }
+
     return { error: null };
   };
 
@@ -100,6 +167,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setSession(null);
+    setUser(null);
+    sessionStorage.removeItem(SESSION_FLAG);
   };
 
   return (
