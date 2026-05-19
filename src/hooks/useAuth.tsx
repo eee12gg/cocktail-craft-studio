@@ -45,18 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const hasSessionFlag = sessionStorage.getItem(SESSION_FLAG);
 
-    // Listen for auth state changes
+    // Listen for auth state changes — never call supabase methods synchronously in the callback (deadlock).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Auto-logout: browser was closed and reopened (sessionStorage cleared)
           if (!sessionStorage.getItem(SESSION_FLAG) && _event === "INITIAL_SESSION") {
-            await supabase.auth.signOut();
-            setIsAdmin(false);
-            setLoading(false);
+            setTimeout(async () => {
+              await supabase.auth.signOut();
+              setIsAdmin(false);
+              setLoading(false);
+            }, 0);
             return;
           }
           sessionStorage.setItem(SESSION_FLAG, "1");
