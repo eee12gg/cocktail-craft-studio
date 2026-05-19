@@ -27,8 +27,7 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
   // Unauthenticated visitors keep the default "admin" path; admins fetch the real one after sign-in.
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const loadFor = async (session: { user: unknown } | null) => {
       if (!session) {
         if (!cancelled) setLoading(false);
         return;
@@ -43,8 +42,12 @@ export function AdminPathProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     };
-    load();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load());
+    // Initial load
+    supabase.auth.getSession().then(({ data: { session } }) => loadFor(session));
+    // React to future auth changes — defer with setTimeout to avoid Supabase listener deadlock.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => loadFor(session), 0);
+    });
     return () => { cancelled = true; subscription.unsubscribe(); };
   }, []);
 
