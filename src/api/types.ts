@@ -39,6 +39,11 @@ export interface RecipeFull extends RecipeLight {
   equipment: { name: string; image_url: string | null; description: string | null }[];
   instructions: string[];
   recommendations: { id: string; slug: string; title: string; image_url: string | null }[];
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_keywords?: string | null;
+  seo_h1?: string | null;
+  visible_langs?: string[];
 }
 
 /* ─── Ingredient types ─────────────────────────────────────────────── */

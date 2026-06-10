@@ -11,6 +11,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { AdminPathProvider, useAdminPath } from "@/hooks/useAdminPath";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { PageMetaProvider } from "@/hooks/usePageMeta";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -70,11 +71,13 @@ function PageLoader() {
 function PublicLayout() {
   return (
     <LanguageProvider>
-      <Header />
-      <Suspense fallback={<PageLoader />}>
-        <Outlet />
-      </Suspense>
-      <Footer />
+      <PageMetaProvider>
+        <Header />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
+        <Footer />
+      </PageMetaProvider>
     </LanguageProvider>
   );
 }

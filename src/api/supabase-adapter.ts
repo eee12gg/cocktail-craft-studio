@@ -47,7 +47,7 @@ export const supabaseAdapter: ContentAdapter = {
     const recipeIds = recipes.map((r) => r.id);
     const needsTranslation = lang !== DEFAULT_LANG;
 
-    // Parallel fetch: ingredients, tags, hashtags, and translations
+    // Parallel fetch: ingredients, tags, hashtags, and translations (with visibility)
     const [ingredientsRes, tagsRes, hashtagsRes, recipeTransRes, ingTransRes] = await Promise.all([
       supabase
         .from("recipe_ingredients")
@@ -57,17 +57,17 @@ export const supabaseAdapter: ContentAdapter = {
       supabase.from("recipe_tags").select("recipe_id, tag").in("recipe_id", recipeIds),
       supabase.from("recipe_hashtags").select("recipe_id, hashtag:hashtags(name)").in("recipe_id", recipeIds),
       needsTranslation
-        ? supabase.from("recipe_translations").select("recipe_id, title, slug, description").eq("language_code", lang)
+        ? (supabase.from("recipe_translations") as any).select("recipe_id, title, slug, description, is_visible").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
       needsTranslation
         ? supabase.from("ingredient_translations").select("ingredient_id, name, slug").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
-    // Build translation lookup maps
-    const recipeTransMap: Record<string, { title: string; slug: string; description: string | null }> = {};
+    // Build translation lookup maps; track hidden recipes for current lang
+    const recipeTransMap: Record<string, { title: string; slug: string; description: string | null; is_visible: boolean }> = {};
     (recipeTransRes.data || []).forEach((t: any) => {
-      recipeTransMap[t.recipe_id] = { title: t.title, slug: t.slug, description: t.description };
+      recipeTransMap[t.recipe_id] = { title: t.title, slug: t.slug, description: t.description, is_visible: t.is_visible !== false };
     });
 
     const ingTransMap: Record<string, { name: string; slug: string }> = {};
@@ -75,38 +75,45 @@ export const supabaseAdapter: ContentAdapter = {
       ingTransMap[t.ingredient_id] = { name: t.name, slug: t.slug };
     });
 
-    // Map recipes with translated content
-    return recipes.map((r) => {
-      const trans = recipeTransMap[r.id];
-      return {
-        id: r.id,
-        slug: trans?.slug || r.slug,
-        title: trans?.title || r.title,
-        category: r.category,
-        image_url: r.image_url,
-        description: trans?.description || r.description,
-        prep_time: r.prep_time,
-        alcohol_level: r.alcohol_level,
-        badge: r.badge,
-        is_published: r.is_published,
-        ingredients: (ingredientsRes.data || [])
-          .filter((i) => i.recipe_id === r.id)
-          .map((i) => {
-            const ingId = asAny(i.ingredient)?.id;
-            const ingTrans = ingId ? ingTransMap[ingId] : null;
-            return {
-              name: ingTrans?.name || asAny(i.ingredient)?.name || "",
-              slug: ingTrans?.slug || asAny(i.ingredient)?.slug || "",
-              amount_value: i.amount_value,
-              amount_unit: i.amount_unit,
-              display_text: i.display_text,
-              image_url: asAny(i.ingredient)?.image_url || null,
-            };
-          }),
-        tags: (tagsRes.data || []).filter((t) => t.recipe_id === r.id).map((t) => t.tag),
-        hashtags: (hashtagsRes.data || []).filter((h) => h.recipe_id === r.id).map((h) => asAny(h.hashtag)?.name || ""),
-      };
-    });
+    // Map recipes with translated content (filter out hidden in current lang)
+    return recipes
+      .filter((r) => {
+        if (!needsTranslation) return true;
+        const t = recipeTransMap[r.id];
+        // If no translation row exists, treat as visible (falls back to en)
+        return !t || t.is_visible;
+      })
+      .map((r) => {
+        const trans = recipeTransMap[r.id];
+        return {
+          id: r.id,
+          slug: trans?.slug || r.slug,
+          title: trans?.title || r.title,
+          category: r.category,
+          image_url: r.image_url,
+          description: trans?.description || r.description,
+          prep_time: r.prep_time,
+          alcohol_level: r.alcohol_level,
+          badge: r.badge,
+          is_published: r.is_published,
+          ingredients: (ingredientsRes.data || [])
+            .filter((i) => i.recipe_id === r.id)
+            .map((i) => {
+              const ingId = asAny(i.ingredient)?.id;
+              const ingTrans = ingId ? ingTransMap[ingId] : null;
+              return {
+                name: ingTrans?.name || asAny(i.ingredient)?.name || "",
+                slug: ingTrans?.slug || asAny(i.ingredient)?.slug || "",
+                amount_value: i.amount_value,
+                amount_unit: i.amount_unit,
+                display_text: i.display_text,
+                image_url: asAny(i.ingredient)?.image_url || null,
+              };
+            }),
+          tags: (tagsRes.data || []).filter((t) => t.recipe_id === r.id).map((t) => t.tag),
+          hashtags: (hashtagsRes.data || []).filter((h) => h.recipe_id === r.id).map((h) => asAny(h.hashtag)?.name || ""),
+        };
+      });
   },
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -117,8 +124,7 @@ export const supabaseAdapter: ContentAdapter = {
 
     // Try to find recipe by translated slug first
     if (lang !== DEFAULT_LANG) {
-      const { data: trans } = await supabase
-        .from("recipe_translations")
+      const { data: trans } = await (supabase.from("recipe_translations") as any)
         .select("recipe_id")
         .eq("slug", slug)
         .eq("language_code", lang)
@@ -156,7 +162,7 @@ export const supabaseAdapter: ContentAdapter = {
       ingredientsRes, stepsRes, equipmentRes,
       tagsRes, hashtagsRes, recsRes,
       recipeTransRes, stepTransRes, ingTransRes,
-      eqTransRes, riTransRes,
+      eqTransRes, riTransRes, allRecipeTransRes,
     ] = await Promise.all([
       supabase.from("recipe_ingredients")
         .select("id, recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
@@ -173,7 +179,7 @@ export const supabaseAdapter: ContentAdapter = {
         .select("sort_order, recommended:recipes!recipe_recommendations_recommended_recipe_id_fkey(id, slug, title, image_url)")
         .eq("recipe_id", recipeId).order("sort_order"),
       needsTranslation
-        ? supabase.from("recipe_translations").select("title, slug, description").eq("recipe_id", recipeId).eq("language_code", lang).maybeSingle()
+        ? (supabase.from("recipe_translations") as any).select("title, slug, description, is_visible, seo_title, seo_description, seo_keywords, seo_h1").eq("recipe_id", recipeId).eq("language_code", lang).maybeSingle()
         : Promise.resolve({ data: null }),
       needsTranslation
         ? supabase.from("recipe_step_translations").select("recipe_step_id, instruction").eq("language_code", lang)
@@ -187,10 +193,19 @@ export const supabaseAdapter: ContentAdapter = {
       needsTranslation
         ? supabase.from("recipe_ingredient_translations").select("recipe_ingredient_id, display_text").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
+      // Visible languages — used for hreflang/switcher filtering on the page
+      (supabase.from("recipe_translations") as any)
+        .select("language_code, is_visible")
+        .eq("recipe_id", recipeId),
     ]);
 
     // Build translation maps
     const trans = recipeTransRes.data as any;
+
+    // If current language is explicitly hidden, treat as not found
+    if (needsTranslation && trans && trans.is_visible === false) {
+      return null;
+    }
 
     const stepTransMap: Record<string, string> = {};
     ((stepTransRes.data as any[]) || []).forEach((t: any) => {
@@ -211,6 +226,17 @@ export const supabaseAdapter: ContentAdapter = {
     ((riTransRes.data as any[]) || []).forEach((t: any) => {
       riTransMap[t.recipe_ingredient_id] = t.display_text;
     });
+
+    // Compute visible languages: default (en) is visible if recipe published;
+    // other langs visible if a row exists with is_visible=true, OR no row at all (falls back to en).
+    const allRows = ((allRecipeTransRes.data as any[]) || []);
+    const hiddenLangs = new Set(allRows.filter((r: any) => r.is_visible === false).map((r: any) => r.language_code));
+    // visible_langs filled in after we know SUPPORTED_LANGS via languages table at the page level;
+    // here we just return hidden info embedded.
+    const visible_langs: string[] = [];
+    // Build set of all known langs from translation rows + en; consumer can intersect with active langs.
+    const seen = new Set<string>([DEFAULT_LANG, ...allRows.map((r: any) => r.language_code)]);
+    seen.forEach((code) => { if (!hiddenLangs.has(code)) visible_langs.push(code); });
 
     // Translate recommended recipe titles
     const recTransMap: Record<string, { title: string; slug: string }> = {};
@@ -239,6 +265,11 @@ export const supabaseAdapter: ContentAdapter = {
       alcohol_level: recipeRow.alcohol_level,
       badge: recipeRow.badge,
       is_published: recipeRow.is_published,
+      seo_title: trans?.seo_title ?? null,
+      seo_description: trans?.seo_description ?? null,
+      seo_keywords: trans?.seo_keywords ?? null,
+      seo_h1: trans?.seo_h1 ?? null,
+      visible_langs,
       ingredients: (ingredientsRes.data || []).map((i: any) => {
         const ingId = asAny(i.ingredient)?.id;
         const it = ingId ? ingTransMap[ingId] : null;
@@ -358,7 +389,7 @@ export const supabaseAdapter: ContentAdapter = {
       supabase.from("recipes")
         .select("id, slug, title, category, image_url, description, prep_time, alcohol_level, badge, is_published")
         .eq("is_published", true),
-      supabase.from("recipe_translations").select("recipe_id, title, slug, description, language_code"),
+      (supabase.from("recipe_translations") as any).select("recipe_id, title, slug, description, language_code, is_visible"),
       supabase.from("ingredients").select("id, slug, name, image_url, type"),
       supabase.from("ingredient_translations").select("ingredient_id, name, slug, language_code"),
       supabase.from("recipe_ingredients")
@@ -409,10 +440,19 @@ export const supabaseAdapter: ContentAdapter = {
         });
     }
 
+    // Hidden recipes for current language (skip from search results)
+    const hiddenInCurrentLang = new Set<string>();
+    if (lang !== DEFAULT_LANG) {
+      recipeTrans.forEach((t: any) => {
+        if (t.language_code === lang && t.is_visible === false) hiddenInCurrentLang.add(t.recipe_id);
+      });
+    }
+
     // ── Match recipes ──────────────────────────────────────────────
     const matchedRecipes: RecipeLight[] = [];
 
     for (const r of recipes) {
+      if (hiddenInCurrentLang.has(r.id)) continue;
       let matched = false;
 
       // Match against original title/description

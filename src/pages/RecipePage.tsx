@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useRecipeBySlug, useRecipesByCategory } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDeclareVisibleLangs } from "@/hooks/usePageMeta";
 import SeoHead from "@/components/SeoHead";
 import DrinkCarousel from "@/components/DrinkCarousel";
 import ReviewSection from "@/components/ReviewSection";
@@ -26,6 +27,9 @@ export default function RecipePage() {
   const { data: categoryRecipes } = useRecipesByCategory(recipe?.category || "cocktails");
   const { localePath, t } = useLanguage();
   const isMobile = useIsMobile();
+
+  useDeclareVisibleLangs(recipe?.visible_langs);
+
 
   if (isLoading) {
     return (
@@ -82,8 +86,9 @@ export default function RecipePage() {
   const seoHead = recipe ? (
     <SeoHead
       path={`/recipe/${recipe.slug}`}
-      title={`${recipe.title} — Cocktail Craft`}
-      description={recipe.description || `${recipe.title} recipe`}
+      title={recipe.seo_title || `${recipe.title} — Cocktail Craft`}
+      description={recipe.seo_description || recipe.description || `${recipe.title} recipe`}
+      availableLangs={recipe.visible_langs as any}
       ogImage={recipe.image_url || undefined}
       jsonLd={recipeJsonLd && breadcrumbJsonLd ? [recipeJsonLd, breadcrumbJsonLd] : undefined}
     />

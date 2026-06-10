@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, Search, GlassWater, X, GripVertical, ExternalLink, ArrowUpDown, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import RecipeTranslationTabs from "@/components/admin/RecipeTranslationTabs";
+import RecipeLanguageEditor from "@/components/admin/RecipeLanguageEditor";
 
 const CATEGORIES = [
   { value: "cocktails", label: "Коктейли" },
@@ -587,14 +587,9 @@ export default function AdminDrinks() {
               </div>
             </div>
 
-            <div>
-              <Label>Описание</Label>
-              <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
-            </div>
-
             <div className="flex items-center gap-2">
               <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
-              <Label>Опубликован</Label>
+              <Label>Глобальная видимость (опубликован)</Label>
             </div>
 
             {/* Ingredients */}
@@ -743,7 +738,7 @@ export default function AdminDrinks() {
               </Select>
             </div>
             {editingId && (
-              <RecipeTranslationTabs recipeId={editingId} />
+              <RecipeLanguageEditor recipeId={editingId} recipeBaseSlug={form.slug || toSlug(form.title)} />
             )}
           </div>
 

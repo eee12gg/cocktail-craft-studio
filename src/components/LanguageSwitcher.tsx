@@ -40,8 +40,15 @@ const DISPLAY_CODE: Record<string, string> = {
   ru: "RU",
 };
 
+import { usePageMeta } from "@/hooks/usePageMeta";
+
 export default function LanguageSwitcher() {
   const { lang, languages, switchLang } = useLanguage();
+  const { visibleLangs } = usePageMeta();
+
+  const shown = visibleLangs
+    ? languages.filter((l) => visibleLangs.includes(l.code))
+    : languages;
 
   return (
     <DropdownMenu>
@@ -53,7 +60,7 @@ export default function LanguageSwitcher() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="min-w-[160px]">
-        {languages.map((l) => (
+        {shown.map((l) => (
           <DropdownMenuItem
             key={l.code}
             onClick={() => switchLang(l.code as LangCode)}
