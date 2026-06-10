@@ -37,16 +37,17 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const { data } = await supabase
-        .from("reviews")
+      const { data } = await (supabase
+        .from("reviews") as any)
         .select("id, author_name, rating, text, created_at")
         .eq("recipe_id", recipeId)
         .eq("is_visible", true)
+        .eq("language_code", lang)
         .order("created_at", { ascending: false });
       if (data) setReviews(data);
     };
     fetchReviews();
-  }, [recipeId]);
+  }, [recipeId, lang]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
