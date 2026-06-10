@@ -44,12 +44,17 @@ Deno.serve(async (req) => {
 
   const { data: recipeTranslations } = await supabase
     .from("recipe_translations")
-    .select("recipe_id, language_code, slug");
+    .select("recipe_id, language_code, slug, is_visible");
 
   const recipeTransMap: Record<string, Record<string, string>> = {};
+  const recipeHidden: Record<string, Set<string>> = {};
   (recipeTranslations || []).forEach((t: any) => {
     if (!recipeTransMap[t.recipe_id]) recipeTransMap[t.recipe_id] = {};
     recipeTransMap[t.recipe_id][t.language_code] = t.slug;
+    if (t.is_visible === false) {
+      if (!recipeHidden[t.recipe_id]) recipeHidden[t.recipe_id] = new Set();
+      recipeHidden[t.recipe_id].add(t.language_code);
+    }
   });
 
   // Fetch ingredients
@@ -78,13 +83,15 @@ Deno.serve(async (req) => {
 
   for (const recipe of recipes || []) {
     const transMap = recipeTransMap[recipe.id] || {};
+    const hidden = recipeHidden[recipe.id] || new Set<string>();
+    const visibleLangs = langCodes.filter((c) => !hidden.has(c));
     const langSlugMap: Record<string, string> = {};
     langSlugMap[DEFAULT_LANG] = `/recipe/${recipe.slug}`;
-    for (const code of langCodes) {
+    for (const code of visibleLangs) {
       if (code === DEFAULT_LANG) continue;
       langSlugMap[code] = `/recipe/${transMap[code] || recipe.slug}`;
     }
-    urls += buildUrlEntryWithSlugs(langSlugMap, langCodes, targets, recipe.updated_at, SITE_URL);
+    urls += buildUrlEntryWithSlugs(langSlugMap, visibleLangs, targets, recipe.updated_at, SITE_URL);
   }
 
   for (const ing of ingredients || []) {
