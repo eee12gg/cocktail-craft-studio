@@ -47,7 +47,7 @@ export const supabaseAdapter: ContentAdapter = {
     const recipeIds = recipes.map((r) => r.id);
     const needsTranslation = lang !== DEFAULT_LANG;
 
-    // Parallel fetch: ingredients, tags, hashtags, and translations
+    // Parallel fetch: ingredients, tags, hashtags, and translations (with visibility)
     const [ingredientsRes, tagsRes, hashtagsRes, recipeTransRes, ingTransRes] = await Promise.all([
       supabase
         .from("recipe_ingredients")
@@ -57,17 +57,17 @@ export const supabaseAdapter: ContentAdapter = {
       supabase.from("recipe_tags").select("recipe_id, tag").in("recipe_id", recipeIds),
       supabase.from("recipe_hashtags").select("recipe_id, hashtag:hashtags(name)").in("recipe_id", recipeIds),
       needsTranslation
-        ? supabase.from("recipe_translations").select("recipe_id, title, slug, description").eq("language_code", lang)
+        ? (supabase.from("recipe_translations") as any).select("recipe_id, title, slug, description, is_visible").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
       needsTranslation
         ? supabase.from("ingredient_translations").select("ingredient_id, name, slug").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
-    // Build translation lookup maps
-    const recipeTransMap: Record<string, { title: string; slug: string; description: string | null }> = {};
+    // Build translation lookup maps; track hidden recipes for current lang
+    const recipeTransMap: Record<string, { title: string; slug: string; description: string | null; is_visible: boolean }> = {};
     (recipeTransRes.data || []).forEach((t: any) => {
-      recipeTransMap[t.recipe_id] = { title: t.title, slug: t.slug, description: t.description };
+      recipeTransMap[t.recipe_id] = { title: t.title, slug: t.slug, description: t.description, is_visible: t.is_visible !== false };
     });
 
     const ingTransMap: Record<string, { name: string; slug: string }> = {};
@@ -75,38 +75,45 @@ export const supabaseAdapter: ContentAdapter = {
       ingTransMap[t.ingredient_id] = { name: t.name, slug: t.slug };
     });
 
-    // Map recipes with translated content
-    return recipes.map((r) => {
-      const trans = recipeTransMap[r.id];
-      return {
-        id: r.id,
-        slug: trans?.slug || r.slug,
-        title: trans?.title || r.title,
-        category: r.category,
-        image_url: r.image_url,
-        description: trans?.description || r.description,
-        prep_time: r.prep_time,
-        alcohol_level: r.alcohol_level,
-        badge: r.badge,
-        is_published: r.is_published,
-        ingredients: (ingredientsRes.data || [])
-          .filter((i) => i.recipe_id === r.id)
-          .map((i) => {
-            const ingId = asAny(i.ingredient)?.id;
-            const ingTrans = ingId ? ingTransMap[ingId] : null;
-            return {
-              name: ingTrans?.name || asAny(i.ingredient)?.name || "",
-              slug: ingTrans?.slug || asAny(i.ingredient)?.slug || "",
-              amount_value: i.amount_value,
-              amount_unit: i.amount_unit,
-              display_text: i.display_text,
-              image_url: asAny(i.ingredient)?.image_url || null,
-            };
-          }),
-        tags: (tagsRes.data || []).filter((t) => t.recipe_id === r.id).map((t) => t.tag),
-        hashtags: (hashtagsRes.data || []).filter((h) => h.recipe_id === r.id).map((h) => asAny(h.hashtag)?.name || ""),
-      };
-    });
+    // Map recipes with translated content (filter out hidden in current lang)
+    return recipes
+      .filter((r) => {
+        if (!needsTranslation) return true;
+        const t = recipeTransMap[r.id];
+        // If no translation row exists, treat as visible (falls back to en)
+        return !t || t.is_visible;
+      })
+      .map((r) => {
+        const trans = recipeTransMap[r.id];
+        return {
+          id: r.id,
+          slug: trans?.slug || r.slug,
+          title: trans?.title || r.title,
+          category: r.category,
+          image_url: r.image_url,
+          description: trans?.description || r.description,
+          prep_time: r.prep_time,
+          alcohol_level: r.alcohol_level,
+          badge: r.badge,
+          is_published: r.is_published,
+          ingredients: (ingredientsRes.data || [])
+            .filter((i) => i.recipe_id === r.id)
+            .map((i) => {
+              const ingId = asAny(i.ingredient)?.id;
+              const ingTrans = ingId ? ingTransMap[ingId] : null;
+              return {
+                name: ingTrans?.name || asAny(i.ingredient)?.name || "",
+                slug: ingTrans?.slug || asAny(i.ingredient)?.slug || "",
+                amount_value: i.amount_value,
+                amount_unit: i.amount_unit,
+                display_text: i.display_text,
+                image_url: asAny(i.ingredient)?.image_url || null,
+              };
+            }),
+          tags: (tagsRes.data || []).filter((t) => t.recipe_id === r.id).map((t) => t.tag),
+          hashtags: (hashtagsRes.data || []).filter((h) => h.recipe_id === r.id).map((h) => asAny(h.hashtag)?.name || ""),
+        };
+      });
   },
 
   /* ═══════════════════════════════════════════════════════════════════
