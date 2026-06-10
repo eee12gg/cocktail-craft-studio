@@ -389,7 +389,7 @@ export const supabaseAdapter: ContentAdapter = {
       supabase.from("recipes")
         .select("id, slug, title, category, image_url, description, prep_time, alcohol_level, badge, is_published")
         .eq("is_published", true),
-      supabase.from("recipe_translations").select("recipe_id, title, slug, description, language_code"),
+      (supabase.from("recipe_translations") as any).select("recipe_id, title, slug, description, language_code, is_visible"),
       supabase.from("ingredients").select("id, slug, name, image_url, type"),
       supabase.from("ingredient_translations").select("ingredient_id, name, slug, language_code"),
       supabase.from("recipe_ingredients")
