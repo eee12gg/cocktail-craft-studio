@@ -743,7 +743,7 @@ export default function AdminDrinks() {
               </Select>
             </div>
             {editingId && (
-              <RecipeTranslationTabs recipeId={editingId} />
+              <RecipeLanguageEditor recipeId={editingId} recipeBaseSlug={form.slug || toSlug(form.title)} />
             )}
           </div>
 
