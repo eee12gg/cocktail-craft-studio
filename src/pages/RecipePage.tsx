@@ -28,6 +28,9 @@ export default function RecipePage() {
   const { localePath, t } = useLanguage();
   const isMobile = useIsMobile();
 
+  useDeclareVisibleLangs(recipe?.visible_langs);
+
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center pt-16">
