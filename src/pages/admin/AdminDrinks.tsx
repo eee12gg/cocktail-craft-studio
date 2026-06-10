@@ -587,14 +587,9 @@ export default function AdminDrinks() {
               </div>
             </div>
 
-            <div>
-              <Label>Описание</Label>
-              <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} />
-            </div>
-
             <div className="flex items-center gap-2">
               <Switch checked={form.is_published} onCheckedChange={(v) => setForm((f) => ({ ...f, is_published: v }))} />
-              <Label>Опубликован</Label>
+              <Label>Глобальная видимость (опубликован)</Label>
             </div>
 
             {/* Ingredients */}
