@@ -60,11 +60,12 @@ export default function ReviewSection({ recipeId, recipeSlug }: { recipeId: stri
 
     setSubmitting(true);
 
-    const { data, error } = await supabase.from("reviews").insert({
+    const { data, error } = await (supabase.from("reviews") as any).insert({
       recipe_id: recipeId,
       author_name: name.trim().slice(0, 100),
       rating,
       text: text.trim().slice(0, 1000),
+      language_code: lang,
     }).select().single();
 
     if (error) {
