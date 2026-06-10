@@ -549,6 +549,41 @@ export type Database = {
           },
         ]
       }
+      recipe_seo_phrases: {
+        Row: {
+          created_at: string
+          id: string
+          language_code: string
+          phrase: string
+          recipe_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language_code: string
+          phrase: string
+          recipe_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language_code?: string
+          phrase?: string
+          recipe_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_seo_phrases_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_step_translations: {
         Row: {
           id: string
@@ -645,8 +680,13 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_visible: boolean
           language_code: string
           recipe_id: string
+          seo_description: string | null
+          seo_h1: string | null
+          seo_keywords: string | null
+          seo_title: string | null
           slug: string
           title: string
           updated_at: string
@@ -655,8 +695,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_visible?: boolean
           language_code: string
           recipe_id: string
+          seo_description?: string | null
+          seo_h1?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
           slug: string
           title: string
           updated_at?: string
@@ -665,8 +710,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_visible?: boolean
           language_code?: string
           recipe_id?: string
+          seo_description?: string | null
+          seo_h1?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
           slug?: string
           title?: string
           updated_at?: string
