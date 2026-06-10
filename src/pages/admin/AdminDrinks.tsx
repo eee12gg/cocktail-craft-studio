@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { Plus, Pencil, Trash2, Search, GlassWater, X, GripVertical, ExternalLink, ArrowUpDown, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import RecipeTranslationTabs from "@/components/admin/RecipeTranslationTabs";
+import RecipeLanguageEditor from "@/components/admin/RecipeLanguageEditor";
 
 const CATEGORIES = [
   { value: "cocktails", label: "Коктейли" },
