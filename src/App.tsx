@@ -70,11 +70,13 @@ function PageLoader() {
 function PublicLayout() {
   return (
     <LanguageProvider>
-      <Header />
-      <Suspense fallback={<PageLoader />}>
-        <Outlet />
-      </Suspense>
-      <Footer />
+      <PageMetaProvider>
+        <Header />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
+        <Footer />
+      </PageMetaProvider>
     </LanguageProvider>
   );
 }
