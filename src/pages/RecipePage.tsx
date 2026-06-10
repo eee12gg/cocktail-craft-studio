@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useRecipeBySlug, useRecipesByCategory } from "@/hooks/useRecipes";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDeclareVisibleLangs } from "@/hooks/usePageMeta";
 import SeoHead from "@/components/SeoHead";
 import DrinkCarousel from "@/components/DrinkCarousel";
 import ReviewSection from "@/components/ReviewSection";
