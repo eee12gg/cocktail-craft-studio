@@ -440,10 +440,19 @@ export const supabaseAdapter: ContentAdapter = {
         });
     }
 
+    // Hidden recipes for current language (skip from search results)
+    const hiddenInCurrentLang = new Set<string>();
+    if (lang !== DEFAULT_LANG) {
+      recipeTrans.forEach((t: any) => {
+        if (t.language_code === lang && t.is_visible === false) hiddenInCurrentLang.add(t.recipe_id);
+      });
+    }
+
     // ── Match recipes ──────────────────────────────────────────────
     const matchedRecipes: RecipeLight[] = [];
 
     for (const r of recipes) {
+      if (hiddenInCurrentLang.has(r.id)) continue;
       let matched = false;
 
       // Match against original title/description
