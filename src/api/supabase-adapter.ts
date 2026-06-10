@@ -124,8 +124,7 @@ export const supabaseAdapter: ContentAdapter = {
 
     // Try to find recipe by translated slug first
     if (lang !== DEFAULT_LANG) {
-      const { data: trans } = await supabase
-        .from("recipe_translations")
+      const { data: trans } = await (supabase.from("recipe_translations") as any)
         .select("recipe_id")
         .eq("slug", slug)
         .eq("language_code", lang)
@@ -163,7 +162,7 @@ export const supabaseAdapter: ContentAdapter = {
       ingredientsRes, stepsRes, equipmentRes,
       tagsRes, hashtagsRes, recsRes,
       recipeTransRes, stepTransRes, ingTransRes,
-      eqTransRes, riTransRes,
+      eqTransRes, riTransRes, allRecipeTransRes,
     ] = await Promise.all([
       supabase.from("recipe_ingredients")
         .select("id, recipe_id, display_text, amount_value, amount_unit, sort_order, ingredient:ingredients(id, name, slug, image_url)")
@@ -180,7 +179,7 @@ export const supabaseAdapter: ContentAdapter = {
         .select("sort_order, recommended:recipes!recipe_recommendations_recommended_recipe_id_fkey(id, slug, title, image_url)")
         .eq("recipe_id", recipeId).order("sort_order"),
       needsTranslation
-        ? supabase.from("recipe_translations").select("title, slug, description").eq("recipe_id", recipeId).eq("language_code", lang).maybeSingle()
+        ? (supabase.from("recipe_translations") as any).select("title, slug, description, is_visible, seo_title, seo_description, seo_keywords, seo_h1").eq("recipe_id", recipeId).eq("language_code", lang).maybeSingle()
         : Promise.resolve({ data: null }),
       needsTranslation
         ? supabase.from("recipe_step_translations").select("recipe_step_id, instruction").eq("language_code", lang)
@@ -194,10 +193,19 @@ export const supabaseAdapter: ContentAdapter = {
       needsTranslation
         ? supabase.from("recipe_ingredient_translations").select("recipe_ingredient_id, display_text").eq("language_code", lang)
         : Promise.resolve({ data: [] as any[] }),
+      // Visible languages — used for hreflang/switcher filtering on the page
+      (supabase.from("recipe_translations") as any)
+        .select("language_code, is_visible")
+        .eq("recipe_id", recipeId),
     ]);
 
     // Build translation maps
     const trans = recipeTransRes.data as any;
+
+    // If current language is explicitly hidden, treat as not found
+    if (needsTranslation && trans && trans.is_visible === false) {
+      return null;
+    }
 
     const stepTransMap: Record<string, string> = {};
     ((stepTransRes.data as any[]) || []).forEach((t: any) => {
@@ -218,6 +226,17 @@ export const supabaseAdapter: ContentAdapter = {
     ((riTransRes.data as any[]) || []).forEach((t: any) => {
       riTransMap[t.recipe_ingredient_id] = t.display_text;
     });
+
+    // Compute visible languages: default (en) is visible if recipe published;
+    // other langs visible if a row exists with is_visible=true, OR no row at all (falls back to en).
+    const allRows = ((allRecipeTransRes.data as any[]) || []);
+    const hiddenLangs = new Set(allRows.filter((r: any) => r.is_visible === false).map((r: any) => r.language_code));
+    // visible_langs filled in after we know SUPPORTED_LANGS via languages table at the page level;
+    // here we just return hidden info embedded.
+    const visible_langs: string[] = [];
+    // Build set of all known langs from translation rows + en; consumer can intersect with active langs.
+    const seen = new Set<string>([DEFAULT_LANG, ...allRows.map((r: any) => r.language_code)]);
+    seen.forEach((code) => { if (!hiddenLangs.has(code)) visible_langs.push(code); });
 
     // Translate recommended recipe titles
     const recTransMap: Record<string, { title: string; slug: string }> = {};
@@ -246,6 +265,11 @@ export const supabaseAdapter: ContentAdapter = {
       alcohol_level: recipeRow.alcohol_level,
       badge: recipeRow.badge,
       is_published: recipeRow.is_published,
+      seo_title: trans?.seo_title ?? null,
+      seo_description: trans?.seo_description ?? null,
+      seo_keywords: trans?.seo_keywords ?? null,
+      seo_h1: trans?.seo_h1 ?? null,
+      visible_langs,
       ingredients: (ingredientsRes.data || []).map((i: any) => {
         const ingId = asAny(i.ingredient)?.id;
         const it = ingId ? ingTransMap[ingId] : null;
