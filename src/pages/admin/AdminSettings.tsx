@@ -1,23 +1,43 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useAdminPath } from "@/hooks/useAdminPath";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { User, Mail, Lock, Save, Link2 } from "lucide-react";
+import { User, Mail, Lock, Save, UserPlus } from "lucide-react";
 
 export default function AdminSettings() {
   const { user } = useAuth();
-  const { adminPath, setAdminPath } = useAdminPath();
-  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [newAdminPath, setNewAdminPath] = useState(adminPath);
+  const [allowRegistration, setAllowRegistration] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "allow_registration")
+      .maybeSingle()
+      .then(({ data }) => setAllowRegistration(data?.value === "true"));
+  }, []);
+
+  const handleToggleRegistration = async (next: boolean) => {
+    setAllowRegistration(next);
+    const { error } = await supabase
+      .from("admin_settings")
+      .update({ value: next ? "true" : "false", updated_at: new Date().toISOString() })
+      .eq("key", "allow_registration");
+    if (error) {
+      toast.error("Не удалось обновить настройку");
+      setAllowRegistration(!next);
+    } else {
+      toast.success(next ? "Регистрация включена" : "Регистрация отключена");
+    }
+  };
 
   const handleUpdateUsername = async () => {
     if (!username.trim()) return;
@@ -69,51 +89,22 @@ export default function AdminSettings() {
     }
   };
 
-  const handleUpdateAdminPath = async () => {
-    setSaving(true);
-    const { error } = await setAdminPath(newAdminPath);
-    setSaving(false);
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success("URL админ-панели обновлён. Перенаправляю...");
-      setTimeout(() => {
-        navigate(`/${newAdminPath}/settings`);
-      }, 1000);
-    }
-  };
-
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <h1 className="font-display text-2xl font-bold text-foreground">Настройки</h1>
 
-      {/* Admin URL */}
+      {/* Allow registration */}
       <section className="rounded-xl border border-border bg-card p-6">
-        <div className="mb-4 flex items-center gap-2">
-          <Link2 className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-lg font-semibold text-foreground">URL админ-панели</h2>
+        <div className="mb-3 flex items-center gap-2">
+          <UserPlus className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-lg font-semibold text-foreground">Регистрация новых администраторов</h2>
         </div>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Текущий путь: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">/{adminPath}</code>
-        </p>
-        <div className="flex gap-3">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">/</span>
-            <Input
-              placeholder="new-admin-path"
-              value={newAdminPath}
-              onChange={(e) => setNewAdminPath(e.target.value.replace(/[^a-zA-Z0-9-_]/g, "").toLowerCase())}
-              className="pl-7"
-            />
-          </div>
-          <Button onClick={handleUpdateAdminPath} disabled={saving || !newAdminPath || newAdminPath === adminPath}>
-            <Save className="mr-2 h-4 w-4" />
-            Изменить
-          </Button>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            Если выключено — страница регистрации недоступна, кнопка скрыта.
+          </p>
+          <Switch checked={allowRegistration} onCheckedChange={handleToggleRegistration} />
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          ⚠️ После изменения старый URL перестанет работать. Запомните новый путь!
-        </p>
       </section>
 
       {/* Username */}
