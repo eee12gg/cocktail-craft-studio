@@ -69,6 +69,7 @@ export type Database = {
           created_at: string
           flag_emoji: string
           id: string
+          is_default: boolean
           language_code: string
         }
         Insert: {
@@ -77,6 +78,7 @@ export type Database = {
           created_at?: string
           flag_emoji?: string
           id?: string
+          is_default?: boolean
           language_code: string
         }
         Update: {
@@ -85,6 +87,7 @@ export type Database = {
           created_at?: string
           flag_emoji?: string
           id?: string
+          is_default?: boolean
           language_code?: string
         }
         Relationships: [
