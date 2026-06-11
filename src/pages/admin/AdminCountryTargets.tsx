@@ -1,12 +1,30 @@
-import { useState, useEffect } from "react";
+/**
+ * Admin — Countries & Languages.
+ *
+ * Каждая страна может иметь несколько языков.
+ * Один из языков помечается как «по умолчанию» для страны.
+ * Удаление последнего языка страны заблокировано триггером БД.
+ */
+
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Globe, MapPin } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, Star, Globe, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface CountryTarget {
@@ -15,6 +33,7 @@ interface CountryTarget {
   country_name: string;
   language_code: string;
   flag_emoji: string;
+  is_default: boolean;
 }
 
 interface LanguageOption {
@@ -69,84 +88,118 @@ const KNOWN_COUNTRIES = [
   { code: "RS", name: "Serbia", flag: "🇷🇸" },
   { code: "GE", name: "Georgia", flag: "🇬🇪" },
   { code: "TR", name: "Turkey", flag: "🇹🇷" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "KR", name: "South Korea", flag: "🇰🇷" },
-  { code: "CN", name: "China", flag: "🇨🇳" },
-  { code: "IN", name: "India", flag: "🇮🇳" },
-  { code: "TH", name: "Thailand", flag: "🇹🇭" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
-  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
-  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
-  { code: "AE", name: "UAE", flag: "🇦🇪" },
-  { code: "IL", name: "Israel", flag: "🇮🇱" },
-  { code: "ZA", name: "South Africa", flag: "🇿🇦" },
-  { code: "EG", name: "Egypt", flag: "🇪🇬" },
   { code: "HU", name: "Hungary", flag: "🇭🇺" },
 ];
 
-const emptyForm = { country_code: "", country_name: "", language_code: "", flag_emoji: "" };
+interface AddDialogState {
+  open: boolean;
+  countryCode: string;
+  countryName: string;
+  countryFlag: string;
+  languageCode: string;
+}
+
+const emptyDialog: AddDialogState = {
+  open: false,
+  countryCode: "",
+  countryName: "",
+  countryFlag: "",
+  languageCode: "",
+};
 
 export default function AdminCountryTargets() {
   const [targets, setTargets] = useState<CountryTarget[]>([]);
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [dialog, setDialog] = useState<AddDialogState>(emptyDialog);
   const [saving, setSaving] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
-    const [targetsRes, langsRes] = await Promise.all([
+    const [t, l] = await Promise.all([
       supabase.from("country_language_targets").select("*").order("country_name"),
       supabase.from("languages").select("code, name, flag_emoji").eq("is_active", true).order("sort_order"),
     ]);
-    if (targetsRes.error) toast.error("Ошибка загрузки");
-    else setTargets((targetsRes.data || []) as CountryTarget[]);
-    if (langsRes.data) setLanguages(langsRes.data as LanguageOption[]);
+    if (t.error) toast.error("Ошибка загрузки стран");
+    else setTargets((t.data || []) as CountryTarget[]);
+    if (l.data) setLanguages(l.data as LanguageOption[]);
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const existingCountries = targets.map(t => t.country_code);
-  const availableCountries = KNOWN_COUNTRIES.filter(c => !existingCountries.includes(c.code));
+  // Group: country -> rows
+  const byCountry = useMemo(() => {
+    const map = new Map<string, CountryTarget[]>();
+    for (const t of targets) {
+      const arr = map.get(t.country_code) || [];
+      arr.push(t);
+      map.set(t.country_code, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) =>
+      (a[1][0]?.country_name || "").localeCompare(b[1][0]?.country_name || "")
+    );
+  }, [targets]);
 
-  const handleSave = async () => {
-    if (!form.country_code || !form.language_code) {
-      toast.error("Выберите страну и язык");
-      return;
+  const handleAdd = async () => {
+    if (!dialog.countryCode || !dialog.languageCode) {
+      return toast.error("Выберите страну и язык");
     }
     setSaving(true);
+    const isFirstForCountry = !targets.some((t) => t.country_code === dialog.countryCode);
     const { error } = await supabase.from("country_language_targets").insert({
-      country_code: form.country_code,
-      country_name: form.country_name,
-      language_code: form.language_code,
-      flag_emoji: form.flag_emoji,
+      country_code: dialog.countryCode,
+      country_name: dialog.countryName,
+      flag_emoji: dialog.countryFlag,
+      language_code: dialog.languageCode,
+      is_default: isFirstForCountry,
     });
-    if (error) toast.error("Ошибка: " + error.message);
-    else { toast.success("Страна добавлена"); setDialogOpen(false); setForm(emptyForm); fetchData(); }
     setSaving(false);
+    if (error) return toast.error("Ошибка: " + error.message);
+    toast.success("Язык добавлен");
+    setDialog(emptyDialog);
+    fetchData();
   };
 
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("country_language_targets").delete().eq("id", id);
-    if (error) toast.error("Ошибка удаления");
-    else { toast.success("Удалено"); fetchData(); }
+  const handleDelete = async (row: CountryTarget) => {
+    const { error } = await supabase.from("country_language_targets").delete().eq("id", row.id);
+    if (error) {
+      toast.error(error.message.includes("последний язык") ? "Нельзя удалить последний язык страны" : "Ошибка удаления");
+    } else {
+      toast.success("Удалено");
+      fetchData();
+    }
   };
 
-  const handleChangeLanguage = async (id: string, newLangCode: string) => {
-    const { error } = await supabase.from("country_language_targets").update({ language_code: newLangCode }).eq("id", id);
-    if (error) toast.error("Ошибка");
-    else fetchData();
+  const handleSetDefault = async (row: CountryTarget) => {
+    // Снять флаг с текущего default, поставить на выбранный.
+    await supabase
+      .from("country_language_targets")
+      .update({ is_default: false })
+      .eq("country_code", row.country_code)
+      .eq("is_default", true);
+    const { error } = await supabase
+      .from("country_language_targets")
+      .update({ is_default: true })
+      .eq("id", row.id);
+    if (error) toast.error("Не удалось установить язык по умолчанию");
+    else {
+      toast.success("Установлен язык по умолчанию");
+      fetchData();
+    }
   };
 
-  // Group targets by language
-  const grouped = languages
-    .map(lang => ({
-      lang,
-      countries: targets.filter(t => t.language_code === lang.code),
-    }))
-    .filter(g => g.countries.length > 0);
+  const openAddDialog = (country?: { code: string; name: string; flag: string }) => {
+    setDialog({
+      open: true,
+      countryCode: country?.code || "",
+      countryName: country?.name || "",
+      countryFlag: country?.flag || "",
+      languageCode: "",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -156,102 +209,114 @@ export default function AdminCountryTargets() {
             <MapPin className="h-6 w-6" /> Страны и языки
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Привязка стран к языкам для SEO (hreflang тегов). Определяет какую языковую версию показывать пользователям из разных стран.
+            Несколько языков на страну. Звезда — язык по умолчанию.
           </p>
         </div>
-        <Button onClick={() => { setForm(emptyForm); setDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-1" /> Добавить страну
+        <Button onClick={() => openAddDialog()}>
+          <Plus className="h-4 w-4 mr-1" /> Добавить запись
         </Button>
       </div>
 
       {loading ? (
         <div className="text-center py-12 text-muted-foreground">Загрузка...</div>
-      ) : targets.length === 0 ? (
+      ) : byCountry.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card p-12 text-center">
           <Globe className="mb-4 h-12 w-12 text-muted-foreground" />
           <p className="text-muted-foreground">Нет привязок стран к языкам</p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {grouped.map(({ lang, countries }) => (
-            <div key={lang.code} className="rounded-lg border border-border overflow-hidden">
-              <div className="bg-secondary/30 px-4 py-2.5 flex items-center gap-2 border-b border-border">
-                <span className="text-lg">{lang.flag_emoji}</span>
-                <span className="font-semibold text-foreground">{lang.name}</span>
-                <span className="text-sm text-muted-foreground font-mono">({lang.code})</span>
-                <span className="ml-auto text-xs text-muted-foreground">{countries.length} стран(ы)</span>
+        <div className="grid gap-4 md:grid-cols-2">
+          {byCountry.map(([code, rows]) => {
+            const country = { code, name: rows[0].country_name, flag: rows[0].flag_emoji };
+            return (
+              <div key={code} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{country.flag}</span>
+                    <div>
+                      <div className="font-semibold text-foreground">{country.name}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{country.code}</div>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openAddDialog(country)}
+                    disabled={rows.length >= languages.length}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Язык
+                  </Button>
+                </div>
+
+                <ul className="space-y-1.5">
+                  {rows.map((r) => {
+                    const lang = languages.find((l) => l.code === r.language_code);
+                    return (
+                      <li
+                        key={r.id}
+                        className="flex items-center justify-between rounded-md bg-secondary/30 px-2.5 py-1.5"
+                      >
+                        <span className="flex items-center gap-2 text-sm">
+                          <span>{lang?.flag_emoji || "🌐"}</span>
+                          <span className="text-foreground">{lang?.name || r.language_code}</span>
+                          <span className="text-xs text-muted-foreground font-mono">({r.language_code})</span>
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={`h-7 w-7 ${r.is_default ? "text-primary" : "text-muted-foreground"}`}
+                            title={r.is_default ? "Язык по умолчанию" : "Сделать языком по умолчанию"}
+                            onClick={() => !r.is_default && handleSetDefault(r)}
+                          >
+                            <Star className={`h-4 w-4 ${r.is_default ? "fill-current" : ""}`} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            title="Удалить язык"
+                            onClick={() => handleDelete(r)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Флаг</TableHead>
-                    <TableHead>Код</TableHead>
-                    <TableHead>Страна</TableHead>
-                    <TableHead>hreflang</TableHead>
-                    <TableHead>Язык</TableHead>
-                    <TableHead className="text-right w-20">Действия</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {countries.map(target => (
-                    <TableRow key={target.id}>
-                      <TableCell className="text-2xl">{target.flag_emoji}</TableCell>
-                      <TableCell className="font-mono text-sm">{target.country_code}</TableCell>
-                      <TableCell>{target.country_name}</TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground">
-                        {target.language_code}-{target.country_code}
-                      </TableCell>
-                      <TableCell>
-                        <Select value={target.language_code} onValueChange={(v) => handleChangeLanguage(target.id, v)}>
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {languages.map(l => (
-                              <SelectItem key={l.code} value={l.code}>
-                                <span className="flex items-center gap-1.5">
-                                  <span>{l.flag_emoji}</span>
-                                  <span>{l.name}</span>
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(target.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialog.open} onOpenChange={(o) => setDialog((d) => ({ ...d, open: o }))}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Добавить страну</DialogTitle>
+            <DialogTitle>Добавить язык к стране</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
               <Label>Страна *</Label>
               <Select
-                value={form.country_code}
+                value={dialog.countryCode}
                 onValueChange={(code) => {
-                  const c = KNOWN_COUNTRIES.find(c => c.code === code);
-                  if (c) setForm(f => ({ ...f, country_code: c.code, country_name: c.name, flag_emoji: c.flag }));
+                  const c = KNOWN_COUNTRIES.find((c) => c.code === code);
+                  if (c)
+                    setDialog((d) => ({
+                      ...d,
+                      countryCode: c.code,
+                      countryName: c.name,
+                      countryFlag: c.flag,
+                    }));
                 }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите страну..." />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
-                  {availableCountries.map(c => (
+                  {KNOWN_COUNTRIES.map((c) => (
                     <SelectItem key={c.code} value={c.code}>
                       <span className="flex items-center gap-2">
                         <span>{c.flag}</span>
@@ -260,34 +325,45 @@ export default function AdminCountryTargets() {
                       </span>
                     </SelectItem>
                   ))}
-                  {availableCountries.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">Все страны добавлены</div>
-                  )}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Язык по умолчанию *</Label>
-              <Select value={form.language_code} onValueChange={(v) => setForm(f => ({ ...f, language_code: v }))}>
+              <Label>Язык *</Label>
+              <Select
+                value={dialog.languageCode}
+                onValueChange={(v) => setDialog((d) => ({ ...d, languageCode: v }))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Выберите язык..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {languages.map(l => (
-                    <SelectItem key={l.code} value={l.code}>
-                      <span className="flex items-center gap-1.5">
-                        <span>{l.flag_emoji}</span>
-                        <span>{l.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
+                  {languages
+                    .filter(
+                      (l) =>
+                        !targets.some(
+                          (t) => t.country_code === dialog.countryCode && t.language_code === l.code
+                        )
+                    )
+                    .map((l) => (
+                      <SelectItem key={l.code} value={l.code}>
+                        <span className="flex items-center gap-1.5">
+                          <span>{l.flag_emoji}</span>
+                          <span>{l.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "..." : "Сохранить"}</Button>
+            <Button variant="outline" onClick={() => setDialog(emptyDialog)}>
+              Отмена
+            </Button>
+            <Button onClick={handleAdd} disabled={saving}>
+              {saving ? "..." : "Сохранить"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
