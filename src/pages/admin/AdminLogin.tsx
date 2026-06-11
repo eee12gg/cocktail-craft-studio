@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminPath } from "@/hooks/useAdminPath";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, Mail, AlertTriangle } from "lucide-react";
@@ -11,9 +12,19 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [allowRegistration, setAllowRegistration] = useState(false);
   const { signIn, isAdmin, user } = useAuth();
   const { adminPath } = useAdminPath();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "allow_registration")
+      .maybeSingle()
+      .then(({ data }) => setAllowRegistration(data?.value === "true"));
+  }, []);
 
   if (user && isAdmin) {
     navigate(`/${adminPath}`, { replace: true });
