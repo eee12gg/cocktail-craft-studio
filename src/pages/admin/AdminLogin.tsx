@@ -103,6 +103,15 @@ export default function AdminLogin() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Вход..." : "Войти"}
           </Button>
+
+          {allowRegistration && (
+            <Link
+              to={`/${adminPath}/register`}
+              className="block text-center text-sm text-muted-foreground hover:text-primary"
+            >
+              Нет аккаунта? Зарегистрироваться
+            </Link>
+          )}
         </form>
       </div>
     </div>
