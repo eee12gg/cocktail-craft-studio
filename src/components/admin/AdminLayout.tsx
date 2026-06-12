@@ -115,16 +115,6 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="border-t border-sidebar-border p-2">
-          <button
-            onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            title={collapsed ? "Выйти" : undefined}
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>Выйти</span>}
-          </button>
-        </div>
       </aside>
 
       <div className="flex flex-1 flex-col">
