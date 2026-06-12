@@ -105,23 +105,13 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Legacy /admin redirects → /editor */}
+      {/* Legacy /admin and old login/register paths redirect to /editor */}
       <Route path="/admin" element={<Navigate to={`/${adminPath}`} replace />} />
       <Route path="/admin/*" element={<Navigate to={`/${adminPath}`} replace />} />
+      <Route path={`/${adminPath}/login`} element={<Navigate to={`/${adminPath}`} replace />} />
+      <Route path={`/${adminPath}/register`} element={<Navigate to={`/${adminPath}`} replace />} />
 
-      <Route
-        path={`/${adminPath}/login`}
-        element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>}
-      />
-      <Route
-        path={`/${adminPath}/register`}
-        element={<Suspense fallback={<PageLoader />}><AdminRegister /></Suspense>}
-      />
-
-      <Route
-        path={`/${adminPath}`}
-        element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
-      >
+      <Route path={`/${adminPath}`} element={<AdminLayout />}>
         <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
         <Route path="drinks" element={<Suspense fallback={<PageLoader />}><AdminDrinks /></Suspense>} />
         <Route path="ingredients" element={<Suspense fallback={<PageLoader />}><AdminIngredients /></Suspense>} />
