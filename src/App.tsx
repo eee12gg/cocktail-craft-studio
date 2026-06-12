@@ -31,9 +31,7 @@ const IngredientsPage = lazy(() => import("./pages/IngredientsPage"));
 const RoulettePage = lazy(() => import("./pages/RoulettePage"));
 const ContactsPage = lazy(() => import("./pages/ContactsPage"));
 
-/* ─── Lazy-loaded admin pages ──────────────────────────────────────── */
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminRegister = lazy(() => import("./pages/admin/AdminRegister"));
+/* ─── Lazy-loaded editor pages ─────────────────────────────────────── */
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminDrinks = lazy(() => import("./pages/admin/AdminDrinks"));
