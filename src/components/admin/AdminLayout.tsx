@@ -122,7 +122,7 @@ export default function AdminLayout() {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-display text-sm font-bold text-gradient-gold">ADMIN</span>
+          <span className="font-display text-sm font-bold text-gradient-gold">ПАНЕЛЬ РЕДАКТОРА</span>
         </header>
         <main className="flex-1 p-4 md:p-6">
           <Outlet />
