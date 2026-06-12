@@ -1,5 +1,4 @@
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useAdminPath } from "@/hooks/useAdminPath";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
