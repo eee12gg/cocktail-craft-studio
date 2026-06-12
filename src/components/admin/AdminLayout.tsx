@@ -8,7 +8,6 @@ import {
   Leaf,
   MessageSquare,
   Settings,
-  LogOut,
   ChevronLeft,
   Menu,
   Globe,
@@ -24,7 +23,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function AdminLayout() {
-  const { signOut } = useAuth();
   const { adminPath } = useAdminPath();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
