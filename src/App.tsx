@@ -146,12 +146,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AuthProvider>
-              <AdminPathProvider>
-                <ScrollToTop />
-                <AppRoutes />
-              </AdminPathProvider>
-            </AuthProvider>
+            <AdminPathProvider>
+              <ScrollToTop />
+              <AppRoutes />
+            </AdminPathProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
