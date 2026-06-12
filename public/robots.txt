@@ -12,8 +12,8 @@ Allow: /
 
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /*/admin/
+Disallow: /editor/
+Disallow: /*/editor/
 Disallow: /search
 Disallow: /*/search
 

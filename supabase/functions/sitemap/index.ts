@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
   });
 
   // Static pages
-  const staticPages = ["/", "/cocktails", "/shots", "/non-alcoholic", "/ingredients", "/search"];
+  const staticPages = ["/", "/cocktails", "/cocktails/classic", "/non-alcoholic", "/ingredients", "/roulette", "/contacts"];
 
   let urls = "";
 

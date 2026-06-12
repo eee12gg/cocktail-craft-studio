@@ -648,7 +648,7 @@ export default function AdminSeo() {
         {expandedSection === "technical" && (
           <div className="mt-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              <StatusItem label="robots.txt" status="ok" detail="Настроен, /admin/ запрещён" />
+              <StatusItem label="robots.txt" status="ok" detail="Настроен, /editor/ запрещён" />
               <StatusItem label="Sitemap" status="ok" detail="Динамический, все языки + страны" />
               <StatusItem label="Canonical URL" status="ok" detail="На всех страницах" />
               <StatusItem label="Hreflang теги" status="ok" detail={`${languages.length} языков + ${countryTargets.length} стран`} />

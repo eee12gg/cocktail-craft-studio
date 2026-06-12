@@ -1,5 +1,4 @@
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useAdminPath } from "@/hooks/useAdminPath";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,6 @@ import {
   Leaf,
   MessageSquare,
   Settings,
-  LogOut,
   ChevronLeft,
   Menu,
   Globe,
@@ -25,7 +23,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function AdminLayout() {
-  const { signOut } = useAuth();
   const { adminPath } = useAdminPath();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -74,7 +71,7 @@ export default function AdminLayout() {
       >
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
-            <span className="font-display text-sm font-bold text-gradient-gold">ADMIN</span>
+            <span className="font-display text-sm font-bold text-gradient-gold">ПАНЕЛЬ РЕДАКТОРА</span>
           )}
           <button
             onClick={() => { setCollapsed(!collapsed); setMobileOpen(false); }}
@@ -118,16 +115,6 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="border-t border-sidebar-border p-2">
-          <button
-            onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            title={collapsed ? "Выйти" : undefined}
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            {!collapsed && <span>Выйти</span>}
-          </button>
-        </div>
       </aside>
 
       <div className="flex flex-1 flex-col">
@@ -135,7 +122,7 @@ export default function AdminLayout() {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-display text-sm font-bold text-gradient-gold">ADMIN</span>
+          <span className="font-display text-sm font-bold text-gradient-gold">ПАНЕЛЬ РЕДАКТОРА</span>
         </header>
         <main className="flex-1 p-4 md:p-6">
           <Outlet />

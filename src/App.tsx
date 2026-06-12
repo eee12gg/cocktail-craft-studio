@@ -7,7 +7,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
 import { AdminPathProvider, useAdminPath } from "@/hooks/useAdminPath";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { ThemeProvider } from "@/hooks/useTheme";
@@ -16,7 +15,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
-import ProtectedRoute from "@/components/admin/ProtectedRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { lazy, Suspense } from "react";
 
@@ -33,9 +31,7 @@ const IngredientsPage = lazy(() => import("./pages/IngredientsPage"));
 const RoulettePage = lazy(() => import("./pages/RoulettePage"));
 const ContactsPage = lazy(() => import("./pages/ContactsPage"));
 
-/* ─── Lazy-loaded admin pages ──────────────────────────────────────── */
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
-const AdminRegister = lazy(() => import("./pages/admin/AdminRegister"));
+/* ─── Lazy-loaded editor pages ─────────────────────────────────────── */
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminDrinks = lazy(() => import("./pages/admin/AdminDrinks"));
@@ -109,23 +105,13 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Legacy /admin redirects → /editor */}
+      {/* Legacy /admin and old login/register paths redirect to /editor */}
       <Route path="/admin" element={<Navigate to={`/${adminPath}`} replace />} />
       <Route path="/admin/*" element={<Navigate to={`/${adminPath}`} replace />} />
+      <Route path={`/${adminPath}/login`} element={<Navigate to={`/${adminPath}`} replace />} />
+      <Route path={`/${adminPath}/register`} element={<Navigate to={`/${adminPath}`} replace />} />
 
-      <Route
-        path={`/${adminPath}/login`}
-        element={<Suspense fallback={<PageLoader />}><AdminLogin /></Suspense>}
-      />
-      <Route
-        path={`/${adminPath}/register`}
-        element={<Suspense fallback={<PageLoader />}><AdminRegister /></Suspense>}
-      />
-
-      <Route
-        path={`/${adminPath}`}
-        element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}
-      >
+      <Route path={`/${adminPath}`} element={<AdminLayout />}>
         <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
         <Route path="drinks" element={<Suspense fallback={<PageLoader />}><AdminDrinks /></Suspense>} />
         <Route path="ingredients" element={<Suspense fallback={<PageLoader />}><AdminIngredients /></Suspense>} />
@@ -160,12 +146,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AuthProvider>
-              <AdminPathProvider>
-                <ScrollToTop />
-                <AppRoutes />
-              </AdminPathProvider>
-            </AuthProvider>
+            <AdminPathProvider>
+              <ScrollToTop />
+              <AppRoutes />
+            </AdminPathProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
