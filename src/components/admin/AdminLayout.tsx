@@ -71,7 +71,7 @@ export default function AdminLayout() {
       >
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
-            <span className="font-display text-sm font-bold text-gradient-gold">ADMIN</span>
+            <span className="font-display text-sm font-bold text-gradient-gold">ПАНЕЛЬ РЕДАКТОРА</span>
           )}
           <button
             onClick={() => { setCollapsed(!collapsed); setMobileOpen(false); }}
